@@ -3,29 +3,29 @@
     <div class="map po-re">
       <div class="info bc-g po-ab">
         <span>
-          预报到场
-          <em></em>辆
+          预报卸货
+          <span class="text">{{_this_data.supplynum}}</span>辆
         </span>
         <span>
           预约卸货
-          <em></em>辆
+          <span class="text">{{_this_data.appointnum}}</span>辆
         </span>
         <span>
           在途中
-          <em></em>辆
+          <span class="text">{{_this_data.inRoad}}</span>辆
         </span>
         <span>
           排队中
-          <em></em>辆
+          <span class="text">{{_this_data.queuenum}}</span>辆
         </span>
         <span>
           已近场
-          <em></em>辆
+          <span class="text">{{_this_data.enteredfactory}}</span>辆
         </span>
 
         <span>
           围栏内
-          <em></em>辆
+          <span class="text">{{_this_data.inCircle}}</span>辆
         </span>
       </div>
       <baidu-map
@@ -35,123 +35,136 @@
         :center="center"
         :zoom="zoom"
         :scroll-wheel-zoom="true"
-        @dragend="dragstart()"
       >
         <bm-marker
-          :position="center1"
-          :dragging="true"
-          animation="BMAP_ANIMATION_BOUNCE"
-          :icon="{url: 'http://developer.baidu.com/map/jsdemo/img/fox.gif', size: {width: 300, height: 157}}"
+          v-for="(el, i) of _this_carList"
+          :key="i"
+          :position="{lng: el.lon,lat: el.lat}"
+          @click="infoWindowOpen"
+          :show="_this_carLabelState"
         >
-          <bm-label
-            content="我爱北京天安门"
-            class="label"
-            :labelStyle="{fontSize: '16px',color: 'orange',padding: '5px 20px',background: 'white'}"
-            :offset="{width: -80, height: 30}"
-          />
+          <bm-info-window :show="_this_carLabelState" :title="el.divernumber" @clickclose="infoWindowClose">
+            <!-- <p class="carNum">{{el.divernumber}}<span class="fl-r" @click="infoWindowClose">X</span></p> -->
+            <ul class="merkerInfo">
+              <li>
+                司机姓名：
+                <span>{{el.name}}</span>
+              </li>
+              <li>
+                司机电话：
+                <span>{{el.mobile}}</span>
+              </li>
+              <li>
+                预约时间：
+                <span>{{el.appointmentdate}}</span>
+              </li>
+              <li>
+                预约矿点：
+                <span>{{el.companyname}}</span>
+              </li>
+              <li>
+                当前位置：
+                <span>{{el.address}}</span>
+              </li>
+            </ul>
+          </bm-info-window>
         </bm-marker>
-
-        <bm-marker
-          :position="center2"
-          :dragging="true"
-          animation="BMAP_ANIMATION_BOUNCE"
-          :icon="{url: 'http://developer.baidu.com/map/jsdemo/img/fox.gif', size: {width: 300, height: 157}}"
-        >
-          <bm-label
-            content="我爱北京天安门"
-            class="label"
-            :labelStyle="{fontSize: '16px',color: 'orange',padding: '5px 20px',background: 'white'}"
-            :offset="{width: -80, height: 30}"
-          />
-        </bm-marker>
-
-        <bm-marker
-          :position="center3"
-          :dragging="true"
-          animation="BMAP_ANIMATION_BOUNCE"
-          :icon="{url: 'http://developer.baidu.com/map/jsdemo/img/fox.gif', size: {width: 300, height: 157}}"
-        >
-          <bm-label
-            content="我爱北京天安门"
-            class="label"
-            :labelStyle="{fontSize: '16px',color: 'orange',padding: '5px 20px',background: 'white'}"
-            :offset="{width: -80, height: 30}"
-          />
-        </bm-marker>
-
-        <bm-driving
-          start="天通苑北"
-          end="宋家庄地铁站"
-          :auto-viewport="true"
-          policy="BMAP_DRIVING_POLICY_LEAST_DISTANCE"
-          :panel="false"
-          location="北京"
-          :waypoints="['西二旗']"
-        ></bm-driving>
       </baidu-map>
     </div>
 
     <!-- 右边数据列表 -->
-    
-    <right-data-list @pullData="receiveData" :pageType="pageType"></right-data-list>
+
+    <right-data-list
+      :pageType="pageType"
+    ></right-data-list>
   </div>
 </template>
 
 <script>
 import { log } from "util";
 import RightDataList from "../components/rightDataList";
-
+import { mapState, mapMutations } from "vuex";
 export default {
   data() {
     return {
       center: { lng: 0, lat: 0 },
-      center1: { lng: 0, lat: 0 },
-      center2: { lng: 0, lat: 0 },
-      center3: { lng: 0, lat: 0 },
-      zoom: 3,
+      zoom: 6,
       city: "",
       width: "100%",
       height: "896px",
-      childData: {},
-      pageType: "monitoring"
+      pageType: "monitoring",
+      data: {},
+      carLabelIndex: 0,
+      markerState: false
     };
   },
   components: {
-      RightDataList
+    RightDataList
   },
+  computed: mapState({
+    _this_data: state => state._mon,
+    _this_carList: state => state._carList,
+    _this_carLabelState: state => state._carLabelState
+  }),
   mounted() {},
   methods: {
+    infoWindowOpen(){
+      this.markerState = this._this_carList.length > 1 ? false : true
+      this._changeCarLabelState();
+    },
+    infoWindowClose(){
+      this.markerState = false;
+      this._changeCarLabelState()
+    },
     handlemapE({ BMap, map }) {
       this.height = `${document.documentElement.clientHeight}`;
       this.center.lng = 116.404;
       this.center.lat = 39.915;
-      this.center1.lng = 116.404;
-      this.center1.lat = 39.915;
-      this.center2.lng = 116.5;
-      this.center2.lat = 39.4;
-      this.center3.lng = 116.6;
-      this.center3.lat = 39.6;
-      this.zoom = 15;
+      this.zoom = 6;
     },
     position() {
       this.center = this.city;
     },
-    dragstart(a, b, c) {
-      // console.log(a, b, c)
+    ...mapMutations(["_changeMon", "_changeCarPoint", "_changeCarLabelState"]),
+    _changeMon(data) {
+      this.$store.commit("_changeMon", data);
     },
-    receiveData(data){
-      this.childData = data;
-      console.log(data)
-      console.log(this.childData)
+    _changeCarPoint(data) {
+      this.$store.commit("_changeCarPoint", data);
+    },
+    _changeCarLabelState(){
+      this.$store.commit("_changeCarLabelState", this.markerState);
+    },
+    getData() {
+      let postData = this.qs.stringify({
+        venderId: "001",
+        type: "1"
+      });
+      this.ajax
+        .post("monitorApi/monitorInTransitAndLocation", postData)
+        .then(res => {
+          this.data = res.data.body;
+          this._changeMon(res.data.body);
+          var carList = [];
+          res.data.body.resultList.forEach((el, i) => {
+            carList.push(...el.carList);
+          });
+          this._changeCarPoint(carList);
+        })
+        .catch(function(error) {
+          console.log(error);
+        });
     }
   },
-  created() {}
+  created() {
+    this.getData();
+  }
 };
 </script>
 <style lang="less" scoped>
 .montioring {
-    overflow: hidden;
-    width: 100%;
+  overflow: hidden;
+  width: 100%;
   & > * {
     float: left;
     display: block;
@@ -172,9 +185,18 @@ export default {
       span {
         display: inline;
       }
-      em {
+      .text {
         font-size: 26px;
       }
+    }
+  }
+}
+.merkerInfo {
+  li {
+    margin: 6px 0;
+    font-size: 14px;
+    span {
+      margin-left: 12px;
     }
   }
 }

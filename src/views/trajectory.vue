@@ -52,11 +52,7 @@
         <bm-overview-map anchor="BMAP_ANCHOR_BOTTOM_RIGHT" :isOpen="true"></bm-overview-map>
         <!-- 跳动 -->
         <!--  animation="BMAP_ANIMATION_BOUNCE" -->
-        <bm-marker
-          :position="startPoint"
-          :icon="satrticon"
-          :zIndex="marker1"
-        ></bm-marker>
+        <!-- <bm-marker :position="startPoint" :icon="satrticon" :zIndex="marker1"></bm-marker> -->
         <bm-marker :position="endPoint" :icon="satrticon" :zIndex="marker2"></bm-marker>
         <bm-polyline :path="path" stroke-color="blue" :stroke-opacity="0.5" :stroke-weight="8"></bm-polyline>
         <bml-lushu @stop="reset" :path="path" :icon="icon" :play="play" :rotation="true" :zIndex="lushuZIndex"></bml-lushu>
@@ -79,8 +75,6 @@ import { BmlLushu } from "vue-baidu-map";
 import { wgs84tobd09 } from "../assets/coordinate";
 const pathArr = require("../assets/path.json");
 const carIcon = require("../assets/images/car.png");
-const carIcon2 = require("../assets/images/car2.png");
-const carIcon3 = require("../assets/images/car3.png");
 export default {
   data() {
     return {
@@ -99,7 +93,7 @@ export default {
       endPoint: { lng: 0, lat: 0 },
       path: [],
       icon: {
-        url: carIcon3,
+        url: carIcon,
         size: { width: 50, height: 19 }
       },
       marker2: 10,
@@ -122,8 +116,6 @@ export default {
     },
     videoEvent() {
       this.play = !this.play;
-        var allOverlay = map.getOverlays();
-        console.log(allOverlay)
     },
     handleSearchComplete(res) {
       this.marker2 = 10;

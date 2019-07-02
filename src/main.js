@@ -4,14 +4,15 @@ import router from './router'
 import BaiduMap from "vue-baidu-map"
 import Axios from 'axios';
 import store from './store'
-
+import publicFn from "../public/publicFn"
 import ElementUI from 'element-ui';
 import 'element-ui/lib/theme-chalk/index.css';
 import qs from 'qs'
 
 Vue.use(ElementUI);
 Vue.prototype.qs = qs;
-
+Vue.prototype.PF = publicFn;
+ 
 
 
 

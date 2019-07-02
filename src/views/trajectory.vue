@@ -1,17 +1,17 @@
 <template>
   <div class="montioring">
     <div class="map po-re">
-      <div class="info po-ab" :class="{closeState: closeState}">
-        <div class="carN"></div>
+      <div v-if="_saveDiverInfo.diverNumber ? _saveDiverInfo.diverNumber : false" class="info po-ab" :class="{closeState: closeState}">
+        <div class="carN">{{_saveDiverInfo.diverNumber}}</div>
         <div class="date">
           开始时间：
-          <span class="startDate"></span>
-          <img src="../assets/images/topjt-b.png" alt>
+          <span class="startDate">{{_saveDiverInfo.startDate}}</span>
+          <img src="../assets/images/topjt-b.png" alt='开始结束时间' style="margin: 0 16px;">
           结束时间：
-          <span class="endDate"></span>
+          <span class="endDate">{{_saveDiverInfo.endDate}}</span>
         </div>
         <div class="gjhf">
-          轨迹回放：
+          <span>轨迹回放：</span>
           <img
             style="width: 26px;margin-top:16px;"
             @click="videoEvent"
@@ -28,7 +28,7 @@
           >
         </div>
 
-        <el-button class="moregj" type="text" @click="dialogVisible = true">更多轨迹</el-button>
+        <el-button class="moregj" type="text" @click="more">更多轨迹</el-button>
         <div class="shrink">
           <div v-if="shrink" class="open shrink_btn" @click="shrinkFn">
             <img src="../assets/images/open-active.png" alt>
@@ -52,18 +52,39 @@
         <bm-overview-map anchor="BMAP_ANCHOR_BOTTOM_RIGHT" :isOpen="true"></bm-overview-map>
         <!-- 跳动 -->
         <!--  animation="BMAP_ANIMATION_BOUNCE" -->
-        <!-- <bm-marker :position="startPoint" :icon="satrticon" :zIndex="marker1"></bm-marker> -->
-        <bm-marker :position="endPoint" :icon="satrticon" :zIndex="marker2"></bm-marker>
+        <bm-marker v-if="path.length > 2" :position="startPoint" :icon="satrticon" :zIndex="marker1"></bm-marker>
+        <bm-marker v-if="path.length > 2" :position="endPoint" :icon="endicon" :zIndex="marker2"></bm-marker>
         <bm-polyline :path="path" stroke-color="blue" :stroke-opacity="0.5" :stroke-weight="8"></bm-polyline>
-        <bml-lushu @stop="reset" :path="path" :icon="icon" :play="play" :rotation="true" :zIndex="lushuZIndex"></bml-lushu>
+        <bml-lushu
+          @stop="reset"
+          :path="path"
+          :icon="icon"
+          :play="play"
+          :rotation="true"
+          :zIndex="lushuZIndex"
+        ></bml-lushu>
       </baidu-map>
     </div>
     <!-- 右边数据列表 -->
     <right-data-list :pageType="pageType"></right-data-list>
 
-    <el-dialog title="历史轨迹" :visible.sync="dialogVisible" width="30%">
-      <span>这是一段信息</span>
-      <span slot="footer" class="dialog-footer"></span>
+    <el-dialog title="历史轨迹" :visible.sync="dialogVisible" width="60%">
+      <el-table :data="tableData" style="width: 100%">
+        <el-table-column type="index" label="序号" width="180"></el-table-column>
+        <el-table-column prop="appointmentdate" label="预约时间" width="180"></el-table-column>
+        <el-table-column prop="create_date" label="轨迹开始时间"></el-table-column>
+        <el-table-column prop="mines" label="预约矿点"></el-table-column>
+        <el-table-column prop="create_date" label="状态">一进厂</el-table-column>
+        <el-table-column label="操作">
+          <template slot-scope="scope">
+            <el-button
+              @click.native.prevent="lockPath(scope.$index, tableData)"
+              type="text"
+              size="small"
+            >查看轨迹</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
     </el-dialog>
   </div>
 </template>
@@ -72,9 +93,12 @@
 import { log } from "util";
 import RightDataList from "../components/rightDataList";
 import { BmlLushu } from "vue-baidu-map";
-import { wgs84tobd09 } from "../assets/coordinate";
-const pathArr = require("../assets/path.json");
 const carIcon = require("../assets/images/car.png");
+const iconStart = require("../assets/images/icon-start.png");
+const iconEnd = require("../assets/images/icon-end.png");
+
+import { mapState, mapMutations } from "vuex";
+
 export default {
   data() {
     return {
@@ -83,10 +107,15 @@ export default {
       pageType: "trajectory",
       play: false,
       dialogVisible: false,
-      startPoint: { lng: 0, lat: 0 },
+      tableData: [],
+      startPoint: { lng: 116.4039539679, lat: 39.9150666134 },
       satrticon: {
-        url: carIcon,
-        size: { width: 19, height: 50 },
+        url: iconStart,
+        size: { width: 32, height: 32 }
+      },
+      endicon: {
+        url: iconEnd,
+        size: { width: 32, height: 32 }
       },
       closeState: false,
       shrink: false,
@@ -106,7 +135,57 @@ export default {
     BmlLushu
   },
   mounted() {},
+  computed: mapState({
+    _saveDiverInfo: state => state._saveDiverInfo,
+    _lushuPath: state => state._lushuPath
+  }),
+  watch: {
+    _lushuPath() {
+      this.path = this._lushuPath;
+      if(this.path.length < 2){
+        return
+      }else{
+      this.startPoint = this.path[0];
+      this.endPoint = this.path[this.path.length - 1];
+      }
+    }
+  },
   methods: {
+    lockPath(a, b) {
+      let param = this.qs.stringify({
+        venderId: "999",
+        diverNumber: this._saveDiverInfo.diverNumber,
+        appointmentId: b[a].id,
+        period: 2
+      });
+      this.$store.commit("_changeDiverNumber", this._saveDiverInfo.diverNumber);
+      this.ajax
+        .post("/monitorApi/orbitOfAppointmentDriverNumber", param)
+        .then(res => {
+          var pathARR = this.PF.parsePath(res.data.body.content);
+          this.path.length
+          this.path = pathARR;
+          this.startPoint = this.path[0];
+          this.endPoint = this.path[this.path.length - 1];
+          this.dialogVisible = false;    
+          // this.$store.commit("_changePath", pathARR);
+        });
+    },
+    more() {
+      this.dialogVisible = true;
+      let param = this.qs.stringify({
+        venderId: "999",
+        diverNumber: this._saveDiverInfo.diverNumber,
+        pagesNo: 0
+      });
+      
+      this.ajax
+        .post("/monitorApi/orbitOfHistoryInFactoryList", param)
+        .then(res => {
+          console.log(res);
+          this.tableData = res.data.body.resultList;
+        });
+    },
     shrinkFn() {
       this.shrink = !this.shrink;
       this.closeState = !this.closeState;
@@ -121,20 +200,23 @@ export default {
       this.marker2 = 10;
       this.marker1 = 10;
       this.lushuZIndex = 2;
-      var scopePath = [];
-      pathArr.forEach((el, i) => {
-        var pathobj = wgs84tobd09(el.lon / 600000, el.lat / 600000);
-        scopePath.push(pathobj);
-      });
-      this.path = scopePath;
-      this.startPoint = this.path[0];
-      this.endPoint = this.path[this.path.length - 1];
+      // var scopePath = [];
+      // pathArr.forEach((el, i) => {
+      //   var pathobj = wgs84tobd09(el.lon / 600000, el.lat / 600000);
+      //   scopePath.push(pathobj);
+      // });
+      // this.path = scopePath;
+      // this.startPoint = this.path[0];
+      // this.endPoint = this.path[this.path.length - 1];
     }
   },
   created() {}
 };
 </script>
 <style lang="less" scoped>
+.operation {
+  color: #1296db;
+}
 .montioring {
   overflow: hidden;
   width: 100%;
@@ -157,12 +239,17 @@ export default {
       border-bottom: solid 1px #ccc;
       transition: width 0.2s, height 0.8s, left 0.2s;
       overflow: hidden;
+      color: #333;
       .carN {
         width: 160px;
         height: 50px;
         background: url("../assets/images/carBg.png") no-repeat 0 0;
         background-size: 100% 100%;
         margin-top: 4px;
+        text-align: center;
+        font-size: 22px;
+        line-height: 50px;
+        max-height: 50px;
       }
       .carN {
         opacity: 1;
@@ -173,25 +260,39 @@ export default {
         opacity: 1;
         height: auto;
         transition: all 1.3s;
-      }
-      .gjhf {
-        opacity: 1;
-        height: auto;
-        transition: all 1.3s;
+        line-height: 50px;
+        span{
+          font-size: 18px;
+        }
       }
       .moregj {
         opacity: 1;
         height: auto;
         transition: all 0.3s;
+        margin-right: 40px;
       }
       .gjhf {
         color: #028445;
+        line-height: 59px;
+        opacity: 1;
+        height: auto;
+        transition: all 1.3s;
+        &>*{
+          display: block;
+          float: left;
+        }
+        span{
+          margin-left: 12px;
+        }
         img {
           cursor: pointer;
         }
       }
       .shrink {
-        margin-top: 20px;
+        top: 96px;
+        right: 430px;
+        position: fixed;
+        z-index: 10;
         .shrink_btn {
           &:hover img {
             &:nth-child(1) {
@@ -222,10 +323,9 @@ export default {
       margin-left: -10px;
       border-radius: 0 0 3px 3px;
       .shrink {
-        margin-top: 8px;
-        margin-right: 120px;
-        position: relative;
-        z-index: 10;
+        right: 59.3%;
+        top: 80px;
+        position: fixed;
       }
       .carN {
         height: 0;

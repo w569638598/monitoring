@@ -23,6 +23,11 @@ export default new Router({
       path: '/trajectory',
       name: "trajectory",
       component: () => import('./views/trajectory.vue')
-    }
+    },
+    {
+      path: '/caution',
+      name: "caution",
+      component: () => import('./views/caution.vue')
+    } 
   ]
 })

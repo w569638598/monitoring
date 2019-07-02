@@ -41,23 +41,26 @@ export default {
     RightList
   },
   methods: {
-    ...mapMutations(["_changeMon"], "_changeCarPoint"),
+    ...mapMutations(["_changeMon", "_changeCarPoint", "_warchType", "_parentEvent"]),
     _changeMon(data) {
       this.$store.commit("_changeMon", data);
     },
      _changeCarPoint(data) {
       this.$store.commit("_changeCarPoint", data);
     },
+    _warchType(type){
+        this.$store.commit("_warchType", type);
+    },
     getAllData(type){
+      this.$store.commit("_parentEvent", "allData")
+      if(this.pageType == "monitoring"){
         let postData = this.qs.stringify({
-        venderId: "001",
+        venderId: "999",
         type: type ? type : 1
       });
-console.log(postData)
       this.ajax
         .post("monitorApi/monitorInTransitAndLocation", postData)
         .then(res => {
-          console.log(res)
           this._changeMon(res.data.body);
                     var carList = [];
           res.data.body.resultList.forEach((el, i) => {
@@ -68,13 +71,21 @@ console.log(postData)
         .catch(function(error) {
           console.log(error);
         });
-        
+        }else{
+          this.$emit("allData", "event")
+        }
     },
     tabFn(i) {
+      this.$store.commit("_parentEvent", "allData")
       this.tabI = i;
       this.a = i;
       this.a++;
-      this.getAllData(this.a)
+      if(this.pageType == "monitoring"){
+        this.getAllData(this.a);
+        return
+      }
+      
+      this._warchType(this.a)
     }
   }
 };
@@ -83,6 +94,8 @@ console.log(postData)
 <style lang="less" scoped>
 .rightBox {
   width: 20%;
+  height: 896px;
+  overflow: auto;
   .tabNavBg {
     background: #f0f4ff;
     height: 46px;
@@ -118,6 +131,7 @@ console.log(postData)
     }
   }
   .tabC {
+    margin-top: -20px;
     .title {
       color: white;
       text-align: center;
@@ -125,6 +139,7 @@ console.log(postData)
       line-height: 36px;
       font-size: 18px;
       margin-top: 0;
+      cursor: pointer;
     }
     .dataList {
       & > li {

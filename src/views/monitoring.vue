@@ -168,9 +168,9 @@ export default {
       this.carLabelIndex = -1;
     },
     _this_carList() {
-      console.log(this._this_carList)
+      console.log(this._this_carList);
       if (this._this_carList.length == 1) {
-        console.log(0)
+        this.zoom = 13;
         this.center.lat = this._this_carList[0].lat;
         this.center.lng = this._this_carList[0].lon;
         // this.carArr = this._this_carList;
@@ -227,27 +227,27 @@ export default {
       this.$store.commit("_changeCarLabelState", this.markerState);
     },
     getData() {
-      console.warn("-++++++++++---------------------++++++++++++++++--------------+++++++++++++++++++")
       this.loading();
       let postData = this.qs.stringify({
         venderId: this._venderLoginId,
         type: "1"
       });
-      
+
       this.ajax
         .post("monitorApi/monitorInTransitAndLocation", postData)
         .then(res => {
-          this.$store.commit(
-            "_changeGlobalVenderName",
-            res.data.body.venderName
-          );
+          if(res.data.errorCode == 200){
+          this.center = {
+            lng: res.data.body.resultList[0].carList[0].lon,
+            lat: res.data.body.resultList[0].carList[0].lat
+          }
+          
           if (res.data.body.coord) {
-            
             this.center = {
               lng: res.data.body.coord.location.split("_")[1],
               lat: res.data.body.coord.location.split("_")[0]
             };
-            this.zoom = 10;
+            this.zoom = 13;
             this.circlePath.center = {
               lng: res.data.body.coord.location.split("_")[1],
               lat: res.data.body.coord.location.split("_")[0]
@@ -274,16 +274,17 @@ export default {
           this._changeMon(res.data.body);
           var carList = [];
           res.data.body.resultList.forEach((el, i) => {
-            for(let i = 0;i < el.carList.length;i++){
-                if(el.carList[i].lat == ""){
-                }else{
-                  carList.push(el.carList[i]);
-                }
+            for (let i = 0; i < el.carList.length; i++) {
+              if (el.carList[i].lat == "") {
+              } else {
+                carList.push(el.carList[i]);
               }
+            }
 
-              // carList.push(el.carList);
+            // carList.push(el.carList);
           });
           this._changeCarPoint(carList);
+          }
           this.loading().close();
         })
         .catch(function(error) {
@@ -311,7 +312,13 @@ export default {
       return newArr;
     }
   },
-  created() {}
+  created() {
+          console.warn(
+        "-++++++++++---------------------++++++++++++++++--------------+++++++++++++++++++"
+      );
+    var venD = this.PF.getVenderId("PC_venderName");
+    this.$store.commit("_changeGlobalVenderName", venD);
+  }
 };
 </script>
 <style lang="less" scoped>

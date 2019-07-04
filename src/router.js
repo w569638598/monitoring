@@ -7,22 +7,22 @@ const router = new Router({
     {
       path: '/',
       name: 'home',
-      component: () => import('./views/monitoring.vue')
+      component: () => import('./views/monitoring.vue'),
     },
     {
       path: '/monitoring',
       name: 'monitoring',
-      component: () => import('./views/monitoring.vue')
+      component: () => import('./views/monitoring.vue'),
     },
     {
       path: '/datastatistics',
       name: "dataStatistics",
-      component: () => import('./views/dataStatistics.vue')
+      component: () => import('./views/dataStatistics.vue'),
     },
     {
       path: '/trajectory',
       name: "trajectory",
-      component: () => import('./views/trajectory.vue')
+      component: () => import('./views/trajectory.vue'),
     },
     {
       path: '/warning',
@@ -70,7 +70,7 @@ const getVenderId = function (cname) {
 
 // 全局路由守卫
 // router.beforeEach((to, from, next) => {
-//   var venderId = getVenderId("PC_venderName");
+//   var venderId = getVenderId("venderLoginId");
 //   if(!venderId){
 //     alert("您还没有登陆");
 //     window.location.href = "http://www.yunmei168.com/venderBigScreen/systemLogin#"

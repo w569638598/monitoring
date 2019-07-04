@@ -6,7 +6,7 @@
         <div class="date">
           开始时间：
           <span class="startDate">{{_saveDiverInfo.startDate}}</span>
-          <img src="../assets/images/topjt-b.png" alt='开始结束时间' style="margin: 0 16px;">
+          <img src="../assets/images/topjt-b.png" alt="开始结束时间" style="margin: 0 16px;" />
           结束时间：
           <span class="endDate">{{_saveDiverInfo.endDate}}</span>
         </div>
@@ -18,25 +18,25 @@
             v-if="!play"
             src="../assets/images/video-play.png"
             alt
-          >
+          />
           <img
             style="width: 26px;margin-top:16px;"
             @click="videoEvent"
             v-else
             src="../assets/images/video-stop.png"
             alt
-          >
+          />
         </div>
 
         <el-button class="moregj" type="text" @click="more">更多轨迹</el-button>
         <div class="shrink">
           <div v-if="shrink" class="open shrink_btn" @click="shrinkFn">
-            <img src="../assets/images/open-active.png" alt>
-            <img src="../assets/images/open-h.png" alt>
+            <img src="../assets/images/open-active.png" alt />
+            <img src="../assets/images/open-h.png" alt />
           </div>
           <div v-else class="close shrink_btn" @click="shrinkFn">
-            <img src="../assets/images/close-active.png" alt>
-            <img src="../assets/images/close-h.png" alt>
+            <img src="../assets/images/close-active.png" alt />
+            <img src="../assets/images/close-h.png" alt />
           </div>
         </div>
       </div>
@@ -52,7 +52,12 @@
         <bm-overview-map anchor="BMAP_ANCHOR_BOTTOM_RIGHT" :isOpen="true"></bm-overview-map>
         <!-- 跳动 -->
         <!--  animation="BMAP_ANIMATION_BOUNCE" -->
-        <bm-marker v-if="path.length > 2" :position="startPoint" :icon="satrticon" :zIndex="marker1"></bm-marker>
+        <bm-marker
+          v-if="path.length > 2"
+          :position="startPoint"
+          :icon="satrticon"
+          :zIndex="marker1"
+        ></bm-marker>
         <bm-marker v-if="path.length > 2" :position="endPoint" :icon="endicon" :zIndex="marker2"></bm-marker>
         <bm-polyline :path="path" stroke-color="blue" :stroke-opacity="0.5" :stroke-weight="8"></bm-polyline>
         <bml-lushu
@@ -85,15 +90,14 @@
           </template>
         </el-table-column>
       </el-table>
-            <el-pagination
-  background
-  layout="prev, pager, next"
-  :page-size="pageSize"
-  :current-page="currentPage"
-  :total="total"
-  @current-change="more"
-  >
-</el-pagination>
+      <el-pagination
+        background
+        layout="prev, pager, next"
+        :page-size="pageSize"
+        :current-page="currentPage"
+        :total="total"
+        @current-change="tabmore"
+      ></el-pagination>
     </el-dialog>
   </div>
 </template>
@@ -107,7 +111,7 @@ const iconStart = require("../assets/images/icon-start.png");
 const iconEnd = require("../assets/images/icon-end.png");
 
 import { mapState, mapMutations } from "vuex";
-import { constants } from 'crypto';
+import { constants } from "crypto";
 
 export default {
   data() {
@@ -119,8 +123,9 @@ export default {
       dialogVisible: false,
       tableData: [],
       total: 0,
-      pageSize: 1,
+      pageSize: 10,
       currentPage: 0,
+      page: 0,
       startPoint: { lng: 116.4039539679, lat: 39.9150666134 },
       satrticon: {
         url: iconStart,
@@ -157,20 +162,41 @@ export default {
   watch: {
     _lushuPath() {
       this.path = this._lushuPath;
-      if(this.path.length < 2){
-        return
-      }else{
-      this.startPoint = this.path[0];
-      this.endPoint = this.path[this.path.length - 1];
+      if (this.path.length < 2) {
+        return;
+      } else {
+        this.startPoint = this.path[0];
+        this.endPoint = this.path[this.path.length - 1];
       }
     },
-    _trajectoryState(){
-      if(!this._trajectoryState){
-        this.path = []
+    _trajectoryState() {
+      if (!this._trajectoryState) {
+        this.path = [];
       }
     }
   },
   methods: {
+    tabmore(a) {
+      this.loading();
+      this.dialogVisible = true;
+      let param = this.qs.stringify({
+        venderId: this._venderLoginId,
+        diverNumber: this._saveDiverInfo.diverNumber,
+        pagesNo: a - 1
+      });
+      this.ajax
+        .post("/monitorApi/orbitOfHistoryInFactoryList", param)
+        .then(res => {
+          if (res.data.errorCode == 200) {
+            this.tableData = res.data.body.resultList;
+            this.total = res.data.body.resultList.length;
+            this.total = res.data.body.size;
+          }else{
+
+          }
+        });
+        this.loading().close();      
+    },
     lockPath(a, b) {
       this.loading();
       let param = this.qs.stringify({
@@ -179,45 +205,45 @@ export default {
         appointmentId: b[a].id,
         period: 2
       });
-      
+
       this.ajax
         .post("/monitorApi/orbitOfAppointmentDriverNumber", param)
         .then(res => {
-          console.log(res)
           var pathARR = this.PF.parsePath(res.data.body.content);
           this.path.length;
           let diverInfo = {
-               
-      diverNumber: res.data.body.diverNumber,
-      startDate: res.data.body.startDate,
-      endDate: res.data.body.endDate
-    
-          }
+            diverNumber: res.data.body.diverNumber,
+            startDate: res.data.body.startDate,
+            endDate: res.data.body.endDate
+          };
           this.$store.commit("_changeDiverNumber", diverInfo);
           this.path = pathARR;
           this.startPoint = this.path[0];
           this.endPoint = this.path[this.path.length - 1];
-          this.dialogVisible = false;    
+          this.dialogVisible = false;
           this.loading().close();
           // this.$store.commit("_changePath", pathARR);
         });
     },
-    more(a) {
+    more() {
       this.loading();
       this.dialogVisible = true;
       let param = this.qs.stringify({
         venderId: this._venderLoginId,
         diverNumber: this._saveDiverInfo.diverNumber,
-        pagesNo: a ? a - 1 : 0
+        pagesNo: 0
       });
-      
       this.ajax
         .post("/monitorApi/orbitOfHistoryInFactoryList", param)
         .then(res => {
+          if(res.data.errorCode == 200){
+            
           this.tableData = res.data.body.resultList;
-          this.total = res.data.body.resultList.length;
-          this.loading().close();
+          this.total = res.data.body.size;
+          }
+          
         });
+        this.loading().close();
     },
     shrinkFn() {
       this.shrink = !this.shrink;
@@ -285,7 +311,7 @@ export default {
         height: auto;
         transition: all 1.3s;
         line-height: 50px;
-        span{
+        span {
           font-size: 18px;
         }
       }
@@ -301,11 +327,11 @@ export default {
         opacity: 1;
         height: auto;
         transition: all 1.3s;
-        &>*{
+        & > * {
           display: block;
           float: left;
         }
-        span{
+        span {
           margin-left: 12px;
         }
         img {

@@ -40,7 +40,7 @@ export default new Vuex.Store({
     globalVenderName: "",
     _venderLoginId: "999"
     //a5d77c301d4f44d698257116f6d4a3d4
-    // getVenderId("PC_venderName")
+    // getVenderId("venderLoginId")
   },
   mutations: {
     _changeMon(a, b){

@@ -498,9 +498,10 @@ export default {
         pieArr.push(pieObj);
       }
       this.setPie(pieArr);
+      console.log("-------------------------------------------------",this.chartNoticeArr);
       this.setEcharts(
         this.PF.intercept(this._this_venderList, 5),
-        this.chartNoticeArr
+        this.chartEnteredfactoryArr
       );
       this.tabData = obj;
     },
@@ -521,10 +522,8 @@ export default {
               vl.push(s);
             }
           });
-
           vl = this.PF.intercept(vl, 15);
           this._changeVender(vl);
-          
           let a = res.data.body.result;
           a.forEach((el, i) => {
             for(let k in el){
@@ -536,9 +535,7 @@ export default {
               }
             }
           })
-          console.log(a)
           this.copyData = res.data.body.result;
-
           this.parseData(res.data.body.result);
           this.loading().close();
         })

@@ -2,8 +2,8 @@
   <div class="top">
     <span class="companyName fl-l">{{globalVenderName}}燃料物流管理平台</span>
     <div class="closeBox fl-r">
-        <img v-if="autoPageState" @click="autopage" class="close" src="@/assets/images/close-ac.png" alt="开启自动切换页面" />
-      <img v-else @click="autopage" class="close" src="@/assets/images/close.png" alt="开启自动切换页面" />
+        <img v-if="autoPageState" @click="autopage" class="close" src="@/assets/images/close-ac.png" alt="开启自动切换页面" title="开启自动切换页面"/>
+      <img v-else @click="autopage" class="close" src="@/assets/images/close.png" alt="开启自动切换页面" title="开启自动切换页面"/>
       
     </div>
     <nav class="fl-r">
@@ -45,7 +45,7 @@ export default {
           _self.navIndex =
             _self.navIndex > 1 ? 0 : _self.navIndex;
           _self.$router.push(_self.router[_self.navIndex]);
-        }, 3000);
+        }, 120000);
       } else {
         clearInterval(this.timer);
       }

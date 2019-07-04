@@ -115,7 +115,7 @@ import { mapState } from "vuex";
 export default {
   data() {
     return {
-      pageSize: 2,
+      pageSize: 10,
       currentPage: 0,
       stripe: true,
       border: true,
@@ -287,7 +287,6 @@ export default {
       });
       this.ajax.post("monitorApi/getWaringList ", param).then(res => {
         res.data.body.result.forEach(el => {
-          console.log(res);
           el.appointmentDate = el.appointmentDate
             ? this.PF.parseDate(el.appointmentDate)
             : "-";
@@ -300,7 +299,7 @@ export default {
     },
     handleSelectionChange() {},
     operationInfo(data, i) {
-      console.log(data, i);
+      
     }
   },
   watch: {

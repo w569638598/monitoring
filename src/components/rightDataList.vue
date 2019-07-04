@@ -12,11 +12,19 @@
     </ul>
     <div class="tabC">
       <div v-if="tabI == 0">
-        <p v-if="pageType == 'monitoring' || pageType == 'dataStatistics'" class="title bc-b" @click="getAllData(a)">全部矿点</p>
+        <p
+          v-if="pageType == 'monitoring' || pageType == 'dataStatistics'"
+          class="title bc-b"
+          @click="getAllData(a)"
+        >全部矿点</p>
         <right-list :pageType="pageType"></right-list>
       </div>
       <div v-else>
-        <p v-if="pageType == 'monitoring' || pageType == 'dataStatistics'" class="title bc-b" @click="getAllData(a)">全部供应单位</p>
+        <p
+          v-if="pageType == 'monitoring' || pageType == 'dataStatistics'"
+          class="title bc-b"
+          @click="getAllData(a)"
+        >全部供应单位</p>
         <right-list :pageType="pageType"></right-list>
       </div>
     </div>
@@ -40,52 +48,67 @@ export default {
   components: {
     RightList
   },
+  computed: mapState({
+    _venderLoginId: state => state._venderLoginId
+  }),
   methods: {
-    ...mapMutations(["_changeMon", "_changeCarPoint", "_warchType", "_parentEvent"]),
+    ...mapMutations([
+      "_changeMon",
+      "_changeCarPoint",
+      "_warchType",
+      "_parentEvent"
+    ]),
     _changeMon(data) {
       this.$store.commit("_changeMon", data);
     },
-     _changeCarPoint(data) {
+    _changeCarPoint(data) {
       this.$store.commit("_changeCarPoint", data);
     },
-    _warchType(type){
-        this.$store.commit("_warchType", type);
+    _warchType(type) {
+      this.$store.commit("_warchType", type);
     },
-    getAllData(type){
-      this.$store.commit("_parentEvent", "allData")
-      if(this.pageType == "monitoring"){
+    getAllData(type) {
+      this.loading();
+      this.$store.commit("_parentEvent", "allData");
+      if (this.pageType == "monitoring") {
         let postData = this.qs.stringify({
-        venderId: "999",
-        type: type ? type : 1
-      });
-      this.ajax
-        .post("monitorApi/monitorInTransitAndLocation", postData)
-        .then(res => {
-          this._changeMon(res.data.body);
-                    var carList = [];
-          res.data.body.resultList.forEach((el, i) => {
-            carList.push(...el.carList);
-          });
-          this._changeCarPoint(carList);
-        })
-        .catch(function(error) {
-          console.log(error);
+          venderId: this._venderLoginId,
+          type: type ? type : 1
         });
-        }else{
-          this.$emit("allData", "event")
-        }
+        this.ajax
+          .post("monitorApi/monitorInTransitAndLocation", postData)
+          .then(res => {
+            this._changeMon(res.data.body);
+            var carList = [];
+            res.data.body.resultList.forEach((el, i) => {
+              for (let i = 0; i < el.carList.length; i++) {
+                if (el.carList[i].lat == "") {
+                } else {
+                  carList.push(el.carList[i]);
+                }
+              }
+            });
+            this._changeCarPoint(carList);
+            this.loading().close();
+          })
+          .catch(function(error) {
+            console.log(error);
+          });
+      } else {
+        this.$emit("allData", "event");
+      }
     },
     tabFn(i) {
-      this.$store.commit("_parentEvent", "allData")
+      this.$store.commit("_parentEvent", "allData");
       this.tabI = i;
       this.a = i;
       this.a++;
-      if(this.pageType == "monitoring"){
+      if (this.pageType == "monitoring") {
         this.getAllData(this.a);
-        return
+        return;
       }
-      
-      this._warchType(this.a)
+
+      this._warchType(this.a);
     }
   }
 };
@@ -197,7 +220,7 @@ export default {
               width: 92%;
               .carNumber {
                 text-align: center;
-                font-weight: bold
+                font-weight: bold;
               }
             }
           }

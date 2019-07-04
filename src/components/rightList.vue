@@ -17,13 +17,16 @@
         :class="{navI: navIndex == i}"
         v-for="(el, i) of _venderList"
         :key="i"
-        @click="_selectVender(el, i)"
+        @click="selectVender(el, i)"
       >{{el}}</li>
     </ul>
     <ul v-else class="dataList" :class="{trag: pageType == 'trajectory'}">
       <li v-for="(item, index) in _list" :key="index" @click.stop="mineral(index, item)">
         <div class="partInfo" v-if="mineralI != index">
-          <p v-if="item.companyname.length > 15" class="name">{{item.companyname.replace(item.companyname.slice(15), "...")}}</p>
+          <p
+            v-if="item.companyname.length > 15"
+            class="name"
+          >{{item.companyname.replace(item.companyname.slice(15), "...")}}</p>
           <p v-else class="name">{{item.companyname}}</p>
           <p class="fc-r fl-r">共{{item.carList.length}}车</p>
         </div>
@@ -45,7 +48,11 @@
               <div class="carInfo">
                 <p class="carNumber fc-r">{{item.divernumber}}</p>
                 <p v-if="pageType == 'trajectory'">{{item.name}}</p>
-                <p v-else class="address">{{item.address}}</p>
+                <p
+                  v-else
+                  class="address"
+                  style="text-align: center"
+                >{{item.address ? item.address : "--"}}</p>
               </div>
             </li>
           </ul>
@@ -57,7 +64,8 @@
 
 <script>
 import { mapState, mapMutations } from "vuex";
-import { stat } from 'fs';
+import { stat } from "fs";
+import { constants } from "crypto";
 export default {
   props: ["pageType"],
   data() {
@@ -73,11 +81,12 @@ export default {
       _list: state => state._mon.resultList,
       _this_tabType: state => state._tabType,
       _venderList: state => state._venderList,
-      _parentEventState: state => state._parentEventState
+      _parentEventState: state => state._parentEventState,
+      _venderLoginId: state => state._venderLoginId
     })
   },
   watch: {
-    _parentEventState(){
+    _parentEventState() {
       this.navIndex = -10;
     },
     date(a) {
@@ -97,7 +106,8 @@ export default {
       "_changeCarLabelState",
       "_selectVender",
       "_changeDiverInfo",
-      "_changeCarLabelIndex"
+      "_changeCarLabelIndex",
+      "_trajectoryInit"
     ]),
     _changeMon(data) {
       this.$store.commit("_changeMon", data);
@@ -108,17 +118,26 @@ export default {
     _changeDiverInfo(a) {
       this.$store.commit("_changeDiverInfo", a);
     },
-    _changeCarLabelIndex(a){
+    _changeCarLabelIndex(a) {
       this.$store.commit("_changeCarLabelIndex", a);
+    },
+    _trajectoryInit(a) {
+      this.$store.commit("_trajectoryInit", a);
     },
     _changeCarLabelState(data, i) {
       //车是个列表，点击单个车的时候，xuyy
+      
       let o = [];
-      o.push(data)
+      if (data.lat == "") {
+        // return;
+      } else {
+        o.push(data);
+      }
       this.carListActive = i;
       if (this.pageType == "trajectory") {
+        this.loading();
         let param = this.qs.stringify({
-          venderId: "999",
+          venderId: this._venderLoginId,
           diverNumber: data.divernumber,
           appointmentId: data.id,
           period: 2
@@ -127,33 +146,42 @@ export default {
         this.ajax
           .post("/monitorApi/orbitOfAppointmentDriverNumber", param)
           .then(res => {
+            this._trajectoryInit(true);
             this._changeDiverInfo(res.data.body);
             let pathARR = this.PF.parsePath(res.data.body.content);
             this.$store.commit("_changePath", pathARR);
+            this.loading().close();
           });
         return;
       }
-      this._changeCarLabelIndex(i)
-      // this.$store.commit("_changeCarPoint", o);
+      this._changeCarLabelIndex(i);
+      this.$store.commit("_changeCarPoint", o);
     },
     mineral(i, item) {
-      this.$store.commit("CLICK_MINERAL", -1)
+      // console.log(item)
+      this.$store.commit("CLICK_MINERAL", -1);
       this.carListActive = -1;
       this.mineralI = i;
-      this._changeCarPoint(item.carList);
+      let filterCar = item.carList.filter(el => {
+        return el.lat !== "";
+      });
+      this._changeCarPoint(filterCar);
     },
-    _selectVender(name, i) {
+    selectVender(name, i) {
       this.navIndex = i;
       this.$store.commit("_selectVender", name);
     },
     getTrajectoryData() {
+      this.loading();
       let param = this.qs.stringify({
-        venderId: "999",
+        venderId: this._venderLoginId,
         searchdate: this.date,
         type: this._this_tabType
       });
       this.ajax.post("/monitorApi/orbitOfMinesOrCompany", param).then(res => {
+        this._trajectoryInit(false);
         this._changeMon(res.data.body);
+        this.loading().close();
       });
     }
   },
@@ -166,10 +194,10 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.carListActive{
-  background: #e9f4ff
+.carListActive {
+  background: #e9f4ff;
 }
-.trag{
+.trag {
   margin-top: 18px;
 }
 .address {
@@ -211,6 +239,9 @@ export default {
     border-bottom: solid 1px #ccc;
     text-align: center;
     cursor: pointer;
+    &:hover {
+      background: #b2d9fd;
+    }
   }
 }
 .dataList {

@@ -3,6 +3,22 @@ import Vuex from 'vuex'
 
 Vue.use(Vuex)
 
+const getVenderId = function (cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+          c = c.substring(1);
+       }
+       if (c.indexOf(name) == 0) {
+          return c.substring(name.length, c.length);
+       }
+   }
+  return "";
+}
+
 export default new Vuex.Store({
   state: {
     _mon: {},
@@ -19,7 +35,12 @@ export default new Vuex.Store({
     _lushuPath: [],
     _carLabelIndex: -1,
     MINERAL_ONCLICK: -10,
-    _parentEventState: -1
+    _parentEventState: -1,
+    _trajectoryState: false,
+    globalVenderName: "",
+    _venderLoginId: "999"
+    //a5d77c301d4f44d698257116f6d4a3d4
+    // getVenderId("PC_venderName")
   },
   mutations: {
     _changeMon(a, b){
@@ -54,6 +75,16 @@ export default new Vuex.Store({
     },
     _parentEvent(a, b){
       a._parentEventState++;
+    },
+    _trajectoryInit(a, b){
+      a._trajectoryState = b;
+    },
+    _changeGlobalVenderName(a, b){
+      a.globalVenderName = b;
+    },
+    _changeDiverNumber(a, b){
+      console.log(b)
+      a._saveDiverInfo = b
     }
   },
   actions: {

@@ -1,7 +1,7 @@
 <template>
   <div class="montioring">
     <div class="map po-re">
-      <div v-if="_saveDiverInfo.diverNumber ? _saveDiverInfo.diverNumber : false" class="info po-ab" :class="{closeState: closeState}">
+      <div v-if="_trajectoryState" class="info po-ab" :class="{closeState: closeState}">
         <div class="carN">{{_saveDiverInfo.diverNumber}}</div>
         <div class="date">
           开始时间：
@@ -74,7 +74,7 @@
         <el-table-column prop="appointmentdate" label="预约时间" width="180"></el-table-column>
         <el-table-column prop="create_date" label="轨迹开始时间"></el-table-column>
         <el-table-column prop="mines" label="预约矿点"></el-table-column>
-        <el-table-column prop="create_date" label="状态">一进厂</el-table-column>
+        <el-table-column prop="create_date" label="状态">已进厂</el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-button
@@ -85,6 +85,15 @@
           </template>
         </el-table-column>
       </el-table>
+            <el-pagination
+  background
+  layout="prev, pager, next"
+  :page-size="pageSize"
+  :current-page="currentPage"
+  :total="total"
+  @current-change="more"
+  >
+</el-pagination>
     </el-dialog>
   </div>
 </template>
@@ -98,6 +107,7 @@ const iconStart = require("../assets/images/icon-start.png");
 const iconEnd = require("../assets/images/icon-end.png");
 
 import { mapState, mapMutations } from "vuex";
+import { constants } from 'crypto';
 
 export default {
   data() {
@@ -108,6 +118,9 @@ export default {
       play: false,
       dialogVisible: false,
       tableData: [],
+      total: 0,
+      pageSize: 1,
+      currentPage: 0,
       startPoint: { lng: 116.4039539679, lat: 39.9150666134 },
       satrticon: {
         url: iconStart,
@@ -137,7 +150,9 @@ export default {
   mounted() {},
   computed: mapState({
     _saveDiverInfo: state => state._saveDiverInfo,
-    _lushuPath: state => state._lushuPath
+    _lushuPath: state => state._lushuPath,
+    _trajectoryState: state => state._trajectoryState,
+    _venderLoginId: state => state._venderLoginId
   }),
   watch: {
     _lushuPath() {
@@ -148,42 +163,60 @@ export default {
       this.startPoint = this.path[0];
       this.endPoint = this.path[this.path.length - 1];
       }
+    },
+    _trajectoryState(){
+      if(!this._trajectoryState){
+        this.path = []
+      }
     }
   },
   methods: {
     lockPath(a, b) {
+      this.loading();
       let param = this.qs.stringify({
-        venderId: "999",
+        venderId: this._venderLoginId,
         diverNumber: this._saveDiverInfo.diverNumber,
         appointmentId: b[a].id,
         period: 2
       });
-      this.$store.commit("_changeDiverNumber", this._saveDiverInfo.diverNumber);
+      
       this.ajax
         .post("/monitorApi/orbitOfAppointmentDriverNumber", param)
         .then(res => {
+          console.log(res)
           var pathARR = this.PF.parsePath(res.data.body.content);
-          this.path.length
+          this.path.length;
+          let diverInfo = {
+               
+      diverNumber: res.data.body.diverNumber,
+      startDate: res.data.body.startDate,
+      endDate: res.data.body.endDate
+    
+          }
+          this.$store.commit("_changeDiverNumber", diverInfo);
           this.path = pathARR;
           this.startPoint = this.path[0];
           this.endPoint = this.path[this.path.length - 1];
           this.dialogVisible = false;    
+          this.loading().close();
           // this.$store.commit("_changePath", pathARR);
         });
     },
-    more() {
+    more(a) {
+      this.loading();
       this.dialogVisible = true;
       let param = this.qs.stringify({
-        venderId: "999",
+        venderId: this._venderLoginId,
         diverNumber: this._saveDiverInfo.diverNumber,
-        pagesNo: 0
+        pagesNo: a ? a - 1 : 0
       });
       
       this.ajax
         .post("/monitorApi/orbitOfHistoryInFactoryList", param)
         .then(res => {
-          console.log(res);
           this.tableData = res.data.body.resultList;
+          this.total = res.data.body.resultList.length;
+          this.loading().close();
         });
     },
     shrinkFn() {
@@ -200,17 +233,8 @@ export default {
       this.marker2 = 10;
       this.marker1 = 10;
       this.lushuZIndex = 2;
-      // var scopePath = [];
-      // pathArr.forEach((el, i) => {
-      //   var pathobj = wgs84tobd09(el.lon / 600000, el.lat / 600000);
-      //   scopePath.push(pathobj);
-      // });
-      // this.path = scopePath;
-      // this.startPoint = this.path[0];
-      // this.endPoint = this.path[this.path.length - 1];
     }
-  },
-  created() {}
+  }
 };
 </script>
 <style lang="less" scoped>

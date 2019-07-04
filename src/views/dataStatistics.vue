@@ -13,7 +13,13 @@
           @change="dateFn"
         ></el-date-picker>
         <span class="fl-r fc-r">
-          <img src="../assets/images/tips.png" alt width="16px;" height="16px;" />
+          <img
+            src="../assets/images/tips.png"
+            alt
+            width="14px;"
+            height="14px;"
+            style="position:relative;top: 3px;"
+          />
           小提醒，请选择时间，用来查询数据
         </span>
       </div>
@@ -151,7 +157,7 @@ import BigNumber from "bignumber.js";
 export default {
   data() {
     return {
-      options: ["今日预报", "今日预约", "已进厂"],
+      options: ["今日预约", "已进厂", "今日预报"],
       date: "",
       pageType: "dataStatistics",
       orgOptions: {},
@@ -212,7 +218,8 @@ export default {
   computed: mapState({
     _this_tabType: state => state._tabType,
     _this_venderList: state => state._venderList,
-    _this_venderName: state => state._venderName
+    _this_venderName: state => state._venderName,
+    _venderLoginId: state => state._venderLoginId
   }),
   watch: {
     _this_tabType() {
@@ -287,7 +294,7 @@ export default {
       this.polar = {
         tooltip: {
           trigger: "item",
-          formatter: "{a} <br/>{b}: {c} ({d}%)"
+          formatter: "{b}: {c} ({d}%)"
         },
         legend: {
           orient: "vertical",
@@ -296,7 +303,7 @@ export default {
         },
         series: [
           {
-            name: "访问来源",
+            // name: "",
             type: "pie",
             radius: ["50%", "70%"],
             avoidLabelOverlap: false,
@@ -363,8 +370,8 @@ export default {
             name: "车数",
             type: "bar",
             barWidth: "60%",
-            data: yData,
-            barMaxWidth: "10%"
+            data: yData
+            // barMaxWidth: "20%"
           }
         ]
       };
@@ -459,6 +466,7 @@ export default {
       obj.onroad.carN = obj.onroad.carN / 10000;
       obj.onroad.tons = obj.onroad.tons / 10000;
       obj.onqueue.carN = obj.onqueue.carN / 10000;
+      obj.onqueue.tons = obj.onqueue.tons / 10000;
       obj.enteredfactory.carN = obj.enteredfactory.carN / 10000;
       obj.enteredfactory.tons = obj.enteredfactory.tons / 10000;
       obj.inCircle.carN = obj.inCircle.carN / 10000;
@@ -490,13 +498,17 @@ export default {
         pieArr.push(pieObj);
       }
       this.setPie(pieArr);
-      this.setEcharts(this.PF.intercept(this._this_venderList, 5), this.chartNoticeArr);
+      this.setEcharts(
+        this.PF.intercept(this._this_venderList, 5),
+        this.chartNoticeArr
+      );
       this.tabData = obj;
     },
     getData() {
+      this.loading();
       var vl = [];
       let param = this.qs.stringify({
-        venderId: "999",
+        venderId: this._venderLoginId,
         appointDate: this.date,
         type: this._this_tabType
       });
@@ -509,11 +521,26 @@ export default {
               vl.push(s);
             }
           });
-          
+
           vl = this.PF.intercept(vl, 15);
           this._changeVender(vl);
+          
+          let a = res.data.body.result;
+          a.forEach((el, i) => {
+            for(let k in el){
+              if(k.length > 15){
+                let s = el[k];
+                let kk = k.replace(k.slice(15), "...");
+                delete el[k];
+                el[kk] = s;
+              }
+            }
+          })
+          console.log(a)
           this.copyData = res.data.body.result;
+
           this.parseData(res.data.body.result);
+          this.loading().close();
         })
         .catch(err => {
           console.log(err);
@@ -522,11 +549,20 @@ export default {
     echartOption(type) {
       this.inpI = type;
       if (type == 0) {
-        this.setEcharts(this.PF.intercept(this._this_venderList, 5), this.chartNoticeArr);
+        this.setEcharts(
+          this.PF.intercept(this._this_venderList, 5),
+          this.chartEnteredfactoryArr
+        );
       } else if (type == 1) {
-        this.setEcharts(this.PF.intercept(this._this_venderList, 5), this.chartAppointmentArr);
+        this.setEcharts(
+          this.PF.intercept(this._this_venderList, 5),
+          this.chartAppointmentArr
+        );
       } else {
-        this.setEcharts(this.PF.intercept(this._this_venderList, 5), this.chartEnteredfactoryArr);
+        this.setEcharts(
+          this.PF.intercept(this._this_venderList, 5),
+          this.chartNoticeArr
+        );
       }
     }
   }
@@ -547,6 +583,9 @@ export default {
     & > img {
       margin-top: 16px;
       margin-right: 30px;
+    }
+    span.fl-r {
+      font-size: 12px;
     }
     .selectDate {
       line-height: 60px;

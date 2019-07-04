@@ -34,9 +34,28 @@ function intercept(obj, num) {
     })
     return arr;
 }
+
+function parseDate(a) {
+    var date = new Date(a);
+    return date.getFullYear() + "-" + ((date.getMonth() + 1) > 9 ? (date.getMonth() + 1) : "0" + (date.getMonth() + 1)) + "-" + (date.getDate() > 9 ? date.getDate() : "0" + date.getDate())
+}
+
+function loading(){
+    this.$loading({
+    lock: true,
+    text: 'Loading',
+    spinner: 'el-icon-loading',
+    background: 'rgba(0, 0, 0, 0.7)'
+  });
+  setTimeout(() => {
+    loading.close();
+  }, 2000);
+}
 export default {
     getToDay,
     formatNum,
     parsePath,
-    intercept
+    intercept,
+    parseDate,
+    loading
 }

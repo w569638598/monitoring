@@ -14,7 +14,16 @@ Vue.prototype.qs = qs;
 Vue.prototype.PF = publicFn;
  
 
+const loading = function(){
+  return this.$loading({
+  lock: true,
+  text: 'Loading',
+  spinner: 'el-icon-loading',
+  background: 'rgba(0, 0, 0, 0.7)'
+});
+}
 
+Vue.prototype.loading = loading;
 
 Vue.config.productionTip = false
 Vue.use(BaiduMap,{
@@ -23,7 +32,9 @@ Vue.use(BaiduMap,{
 
 import './assets/public.less'
 // import './assets/coordinate.js'
-Axios.defaults.baseURL = 'http://192.168.1.149:81/';
+// 'http://39.105.172.118:81/';
+//'http://192.168.1.149:81/';
+Axios.defaults.baseURL = "http://192.168.1.149:81/";
 Axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 Vue.prototype.ajax = Axios;
 

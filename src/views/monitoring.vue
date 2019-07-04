@@ -104,7 +104,7 @@
               </li>
               <li>
                 预约时间：
-                <span>{{el.appointmentdate}}</span>
+                <span>{{el.appointmentdate.split(" ")[0]}}</span>
               </li>
               <li>
                 预约矿点：
@@ -131,7 +131,7 @@ import { log } from "util";
 import RightDataList from "../components/rightDataList";
 import { mapState, mapMutations } from "vuex";
 import { constants } from "crypto";
-import { truncate } from 'fs';
+import { truncate } from "fs";
 const carIcon = require("../assets/images/car3.png");
 export default {
   data() {
@@ -159,12 +159,31 @@ export default {
       },
       polyline1: [],
       polyline2: [],
-      polyline3: []
+      polyline3: [],
+      carArr: []
     };
   },
   watch: {
-    _MINERAL_ONCLICK(){
+    _MINERAL_ONCLICK() {
       this.carLabelIndex = -1;
+    },
+    _this_carList() {
+      console.log(this._this_carList)
+      if (this._this_carList.length == 1) {
+        console.log(0)
+        this.center.lat = this._this_carList[0].lat;
+        this.center.lng = this._this_carList[0].lon;
+        // this.carArr = this._this_carList;
+
+        // this.carArr.forEach((el, i) => {
+        //   // console.log(el)
+        //   if (el.lat == "") {
+        //     this.carArr.splice(this.carArr[i], 1);
+        //   }
+        // });
+      }
+
+      // console.log(this._this_carList)
     }
   },
   components: {
@@ -175,7 +194,8 @@ export default {
     _this_carList: state => state._carList,
     _this_carLabelState: state => state._carLabelState,
     _this_carLabelIndex: state => state._carLabelIndex,
-    _MINERAL_ONCLICK: state => state.MINERAL_ONCLICK
+    _MINERAL_ONCLICK: state => state.MINERAL_ONCLICK,
+    _venderLoginId: state => state._venderLoginId
   }),
   methods: {
     infoWindowOpen(i) {
@@ -191,7 +211,12 @@ export default {
     position() {
       this.center = this.city;
     },
-    ...mapMutations(["_changeMon", "_changeCarPoint", "_changeCarLabelState"]),
+    ...mapMutations([
+      "_changeMon",
+      "_changeCarPoint",
+      "_changeCarLabelState",
+      "_changeGlobalVenderName"
+    ]),
     _changeMon(data) {
       this.$store.commit("_changeMon", data);
     },
@@ -202,20 +227,31 @@ export default {
       this.$store.commit("_changeCarLabelState", this.markerState);
     },
     getData() {
+      console.warn("-++++++++++---------------------++++++++++++++++--------------+++++++++++++++++++")
+      this.loading();
       let postData = this.qs.stringify({
-        venderId: "999",
+        venderId: this._venderLoginId,
         type: "1"
       });
+      
       this.ajax
         .post("monitorApi/monitorInTransitAndLocation", postData)
         .then(res => {
+          this.$store.commit(
+            "_changeGlobalVenderName",
+            res.data.body.venderName
+          );
           if (res.data.body.coord) {
+            
             this.center = {
               lng: res.data.body.coord.location.split("_")[1],
               lat: res.data.body.coord.location.split("_")[0]
             };
-            this.zoom = 10
-            this.circlePath.center = this.center;
+            this.zoom = 10;
+            this.circlePath.center = {
+              lng: res.data.body.coord.location.split("_")[1],
+              lat: res.data.body.coord.location.split("_")[0]
+            };
             this.Radius = Number(res.data.body.coord.radius);
             if (res.data.body.coord.enclosure1) {
               this.polyline1 = this.parseEnclosurePath(
@@ -238,9 +274,17 @@ export default {
           this._changeMon(res.data.body);
           var carList = [];
           res.data.body.resultList.forEach((el, i) => {
-            carList.push(...el.carList);
+            for(let i = 0;i < el.carList.length;i++){
+                if(el.carList[i].lat == ""){
+                }else{
+                  carList.push(el.carList[i]);
+                }
+              }
+
+              // carList.push(el.carList);
           });
           this._changeCarPoint(carList);
+          this.loading().close();
         })
         .catch(function(error) {
           console.log(error);
@@ -287,7 +331,7 @@ export default {
       justify-content: space-around;
       top: 0;
       height: 42px;
-      z-index: 9999;
+      z-index: 9;
       width: 60%;
       left: 20%;
       border-radius: 0 0 36px 36px;

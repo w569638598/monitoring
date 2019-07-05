@@ -61,6 +61,8 @@ export default {
         this.navIndex = i;
       }
     });
+    var venD = this.PF.getVenderId("PC_venderName");
+    this.$store.commit("_changeGlobalVenderName", venD);
   },
   methods: {
     navClick(i) {

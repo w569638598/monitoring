@@ -83,7 +83,6 @@ export default new Vuex.Store({
       a.globalVenderName = b;
     },
     _changeDiverNumber(a, b){
-      console.log(b)
       a._saveDiverInfo = b
     }
   },

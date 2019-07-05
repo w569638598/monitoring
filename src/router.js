@@ -73,7 +73,7 @@ router.beforeEach((to, from, next) => {
   var venderId = getVenderId("venderLoginId");
   if(!venderId){
     alert("您还没有登陆");
-    window.location.href = "http://www.yunmei168.com/venderBigScreen/systemLogin#"
+    window.location.href = "http://192.168.1.149:8888/venderBigScreen/systemLogin#"
     next(false);
     return
   }

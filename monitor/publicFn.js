@@ -66,7 +66,7 @@ const getVenderId = function (cname) {
             return c.substring(name.length, c.length);
          }
      }
-    return false;
+    return "";
   }
 
 export default {

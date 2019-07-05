@@ -316,8 +316,6 @@ export default {
           console.warn(
         "-++++++++++---------------------++++++++++++++++--------------+++++++++++++++++++"
       );
-    var venD = this.PF.getVenderId("PC_venderName");
-    this.$store.commit("_changeGlobalVenderName", venD);
   }
 };
 </script>

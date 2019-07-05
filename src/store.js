@@ -38,7 +38,7 @@ export default new Vuex.Store({
     _parentEventState: -1,
     _trajectoryState: false,
     globalVenderName: "",
-    _venderLoginId: "999"
+    _venderLoginId: getVenderId("venderLoginId")
     //a5d77c301d4f44d698257116f6d4a3d4
     // getVenderId("venderLoginId")
   },

@@ -90,7 +90,7 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-pagination
+      <el-pagination style="margin-top: 20px;"
         background
         layout="prev, pager, next"
         :page-size="pageSize"

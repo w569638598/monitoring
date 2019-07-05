@@ -2,9 +2,22 @@
   <div class="top">
     <span class="companyName fl-l">{{globalVenderName}}燃料物流管理平台</span>
     <div class="closeBox fl-r">
-        <img v-if="autoPageState" @click="autopage" class="close" src="@/assets/images/close-ac.png" alt="开启自动切换页面" title="开启自动切换页面"/>
-      <img v-else @click="autopage" class="close" src="@/assets/images/close.png" alt="开启自动切换页面" title="开启自动切换页面"/>
-      
+      <img
+        v-if="autoPageState"
+        @click="autopage"
+        class="close"
+        src="@/assets/images/close-ac.png"
+        alt="开启自动切换页面"
+        title="开启自动切换页面"
+      />
+      <img
+        v-else
+        @click="autopage"
+        class="close"
+        src="@/assets/images/close.png"
+        alt="开启自动切换页面"
+        title="开启自动切换页面"
+      />
     </div>
     <nav class="fl-r">
       <span
@@ -19,7 +32,7 @@
 
 <script>
 import { setInterval, clearInterval } from "timers";
-import {mapState} from 'vuex'
+import { mapState } from "vuex";
 export default {
   data() {
     return {
@@ -27,10 +40,28 @@ export default {
       navIndex: 0,
       router: ["monitoring", "datastatistics", "trajectory", "warning"],
       autoPageState: false,
-      timer: null,
+      timer: null
     };
   },
   computed: mapState(["globalVenderName"]),
+  watch: {
+    $route() {
+      const routerPath = this.$route.path.slice(1);
+      this.router.forEach((el, i) => {
+        if (routerPath == el) {
+          this.navIndex = i;
+        }
+      });
+    }
+  },
+  created() {
+    const routerPath = this.$route.path.slice(1);
+    this.router.forEach((el, i) => {
+      if (routerPath == el) {
+        this.navIndex = i;
+      }
+    });
+  },
   methods: {
     navClick(i) {
       this.navIndex = i;
@@ -42,8 +73,7 @@ export default {
       if (this.autoPageState) {
         this.timer = setInterval(function() {
           _self.navIndex++;
-          _self.navIndex =
-            _self.navIndex > 1 ? 0 : _self.navIndex;
+          _self.navIndex = _self.navIndex > 1 ? 0 : _self.navIndex;
           _self.$router.push(_self.router[_self.navIndex]);
         }, 120000);
       } else {

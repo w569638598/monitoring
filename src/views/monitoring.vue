@@ -136,7 +136,8 @@ const carIcon = require("../assets/images/car3.png");
 export default {
   data() {
     return {
-      center: { lng: 0, lat: 0 },
+      center: { lng: 116.4039325102,
+          lat: 39.9151612554 },
       zoom: 6,
       Radius: 7000,
       city: "",
@@ -168,22 +169,11 @@ export default {
       this.carLabelIndex = -1;
     },
     _this_carList() {
-      console.log(this._this_carList);
       if (this._this_carList.length == 1) {
         this.zoom = 13;
         this.center.lat = this._this_carList[0].lat;
         this.center.lng = this._this_carList[0].lon;
-        // this.carArr = this._this_carList;
-
-        // this.carArr.forEach((el, i) => {
-        //   // console.log(el)
-        //   if (el.lat == "") {
-        //     this.carArr.splice(this.carArr[i], 1);
-        //   }
-        // });
       }
-
-      // console.log(this._this_carList)
     }
   },
   components: {
@@ -280,9 +270,8 @@ export default {
                 carList.push(el.carList[i]);
               }
             }
-
-            // carList.push(el.carList);
           });
+          this._changeMon(res.data.body);
           this._changeCarPoint(carList);
           }
           this.loading().close();
@@ -292,9 +281,6 @@ export default {
         });
     },
     updateCirclePath(e) {
-      // this.circlePath.center = e.target.getCenter();
-      // console.log(this.circlePath.center, this.Radius)
-      // this.Radius = e.target.getRadius();
     },
     updatePolygonPath(e) {
       this.polyline1 = e.target.getPath();
@@ -311,11 +297,6 @@ export default {
       }
       return newArr;
     }
-  },
-  created() {
-          console.warn(
-        "-++++++++++---------------------++++++++++++++++--------------+++++++++++++++++++"
-      );
   }
 };
 </script>

@@ -362,7 +362,6 @@ export default {
       // this.tableData = data;
     },
     openMap(a, b){
-      console.log(a)
       if(a == '0.0'){
         alert("查询不到位置信息")
         return

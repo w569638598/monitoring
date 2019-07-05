@@ -158,14 +158,16 @@ export default {
       this.$store.commit("_changeCarPoint", o);
     },
     mineral(i, item) {
-      // console.log(item)
+      
       this.$store.commit("CLICK_MINERAL", -1);
       this.carListActive = -1;
       this.mineralI = i;
+      if(this.pageType == "monitoring"){
       let filterCar = item.carList.filter(el => {
         return el.lat !== "";
       });
       this._changeCarPoint(filterCar);
+      }
     },
     selectVender(name, i) {
       this.navIndex = i;

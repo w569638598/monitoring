@@ -498,7 +498,6 @@ export default {
         pieArr.push(pieObj);
       }
       this.setPie(pieArr);
-      console.log("-------------------------------------------------",this.chartNoticeArr);
       this.setEcharts(
         this.PF.intercept(this._this_venderList, 5),
         this.chartEnteredfactoryArr

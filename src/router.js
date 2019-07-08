@@ -24,25 +24,29 @@ const router = new Router({
       name: "trajectory",
       component: () => import('./views/trajectory.vue'),
     },
+    // {
+    //   path: '/warning',
+    //   name: "warning",
+    //   component: () => import('./views/warning/warning.vue'),
+    //   // children: [
+    //   //   {
+    //   //     path: "*",
+    //   //     component: () => import('')
+    //   //   }
+    //   // ]
+    // },
     {
-      path: '/warning',
-      name: "warning",
-      component: () => import('./views/warning.vue'),
-      // children: [
-      //   {
-      //     path: "*",
-      //     component: () => import('')
-      //   }
-      // ]
-    },
-    {
-      path: '/warning/:type', component: () => import('./views/warning.vue'),
+      path: '/warning', 
+      component: () => import('./views/warning/index.vue'),
       children: [
-        // 当 /user/:id 匹配成功，
-        // UserHome 会被渲染在 User 的 <router-view> 中
-        { path: '', component: () => import('./views/warning.vue') },
-
-        // ...其他子路由
+        { path: 'statistics', component: () => import('./views/warning/statistics.vue') },
+        { path: 'blackout', component: () => import('./views/warning/blackout.vue') },
+        { path: 'deviate', component: () => import('./views/warning/deviate.vue') },
+        { path: 'GPSBug', component: () => import('./views/warning/GPSBug.vue') },
+        { path: 'set', component: () => import('./views/warning/set.vue') },
+        { path: 'temperatureH', component: () => import('./views/warning/temperatureH.vue') },
+        { path: 'timeout', component: () => import('./views/warning/timeout.vue') },
+        { path: 'warning', component: () => import('./views/warning/warning.vue') }
       ]
     }
   ]

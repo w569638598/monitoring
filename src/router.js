@@ -24,17 +24,6 @@ const router = new Router({
       name: "trajectory",
       component: () => import('./views/trajectory.vue'),
     },
-    // {
-    //   path: '/warning',
-    //   name: "warning",
-    //   component: () => import('./views/warning/warning.vue'),
-    //   // children: [
-    //   //   {
-    //   //     path: "*",
-    //   //     component: () => import('')
-    //   //   }
-    //   // ]
-    // },
     {
       path: '/warning', 
       component: () => import('./views/warning/index.vue'),

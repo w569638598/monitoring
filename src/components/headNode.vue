@@ -38,7 +38,7 @@ export default {
     return {
       nav: ["在途监控", "数据统计", "行驶轨迹", "报警信息"],
       navIndex: 0,
-      router: ["monitoring", "datastatistics", "trajectory", "warning"],
+      router: ["/monitoring", "/datastatistics", "/trajectory", "/warning/warning"],
       autoPageState: false,
       timer: null
     };

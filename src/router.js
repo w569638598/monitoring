@@ -69,16 +69,16 @@ const getVenderId = function (cname) {
 
 
 // 全局路由守卫
-router.beforeEach((to, from, next) => {
-  var venderId = getVenderId("venderLoginId");
-  if(!venderId){
-    alert("您还没有登陆");
-    window.location.href = "http://192.168.1.149:8888/venderBigScreen/systemLogin#"
-    next(false);
-    return
-  }
-  next() // 必须使用 next ,执行效果依赖 next 方法的调用参数
-})
+// router.beforeEach((to, from, next) => {
+//   var venderId = getVenderId("venderLoginId");
+//   if(!venderId){
+//     alert("您还没有登陆");
+//     window.location.href = "http://192.168.1.149:8888/venderBigScreen/systemLogin#"
+//     next(false);
+//     return
+//   }
+//   next() // 必须使用 next ,执行效果依赖 next 方法的调用参数
+// })
 
 
 

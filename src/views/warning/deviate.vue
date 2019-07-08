@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>路线偏离</h1>
+        <img class="soonOnline" src="../../assets/images/soonOnline.png" alt="">
     </div>
 </template>
 

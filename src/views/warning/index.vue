@@ -431,6 +431,10 @@ export default {
 };
 </script>
 <style lang="less">
+.soonOnline{
+    display: block;
+    margin: 0 auto;
+}
 .el-dialog__body {
   padding-top: 20px;
 }

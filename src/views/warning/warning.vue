@@ -1,6 +1,64 @@
 <template>
   <div>
     <div class="">
+            <div class="selectOption">
+        筛选：
+        <el-date-picker
+          style="margin-top:6px;"
+          v-model="startDate"
+          type="date"
+          placeholder="开始时间"
+          value-format="yyyy-MM-dd"
+          class="fl-l"
+        ></el-date-picker>
+
+        <el-date-picker
+          style="margin-top:6px;"
+          v-model="endDate"
+          type="date"
+          placeholder="结束时间日期"
+          value-format="yyyy-MM-dd"
+          class="fl-l"
+        ></el-date-picker>
+
+        <el-select v-model="read" placeholder="请选择阅读状态" style="width: 180px">
+          <el-option
+            v-for="item in readState"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+        <el-select v-model="warning" placeholder="报警类型" style="width: 180px">
+          <el-option
+            v-for="item in warningState"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+        <el-select v-model="sortDate" placeholder="选择倒序排列时间" style="width: 180px">
+          <el-option
+            v-for="item in sortDateState"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+        <el-input class="carNumber" placeholder="输入车牌号" v-model="driverNumber" clearable></el-input>
+        <!-- <span>重置</span> -->
+        <span @click="operationSome" style="cursor:pointer; color: #4596db">标记所选项为已读</span>
+        <span style="font-size: 12px;" class="fl-r">
+          <img
+            src="../../assets/images/tips.png"
+            alt
+            width="16px;"
+            height="16px;"
+            style="position: relative;top: 4px;"
+          />
+          共{{dataLength}}条报警信息
+        </span>
+      </div>
       <el-table
         ref="multipleTable"
         :data="tableData"
@@ -20,10 +78,10 @@
         <el-table-column prop="mines" label="预约矿点"></el-table-column>
         <el-table-column prop="commandmsg" label="报警类型"></el-table-column>
         <el-table-column prop="eventtime" label="报警时间"></el-table-column>
-        <el-table-column prop="hasRead" label="状态" width="120"></el-table-column>
+        <el-table-column prop="hasread" label="状态" width="120"></el-table-column>
         <el-table-column label="操作" show-overflow-tooltip>
           <template slot-scope="scope">
-            <span v-if="scope.row.hasRead == '已读'"></span>
+            <span v-if="scope.row.hasread == '已读'"></span>
             <span v-else @click="operationread(scope.row, scope.$index)">标记为已读</span>
             <span @click="operationInfo(scope.row)">详情</span>
           </template>
@@ -56,7 +114,7 @@
                   <span>报警时间：</span>{{infoData.eventtime}}
                 </p>
                 <p>
-                  <span>标记状态：</span>{{infoData.hasRead}}
+                  <span>标记状态：</span>{{infoData.hasread}}
                 </p>
               </div>
             </div>
@@ -140,20 +198,9 @@ export default {
       },
       width: "100%",
       height: "500px",
-      active: 0,
       ids: [],
       infoData: [],
       idstr: "",
-      leftNav: [
-        "报警信息",
-        "统计报表",
-        "路线偏离",
-        "断电报警",
-        "停车超时",
-        "温度过高",
-        "GPS故障",
-        "设置"
-      ],
       startDate: this.PF.getToDay(),
       endDate: this.PF.getToDay(),
       readState: [
@@ -228,15 +275,6 @@ export default {
         this.ids.push(el.id);
       });
     },
-    navClick(i) {
-      this.$message({
-        message: "敬请期待",
-        center: true,
-        duration: 1000
-      });
-      return;
-      this.active = i;
-    },
     operationread(a, b) {
       var param;
       if (a.id) {
@@ -248,7 +286,6 @@ export default {
           ids: a
         });
       }
-      var _self = this;
       this.ajax.post("monitorApi/updateWaring", param).then(res => {
         if (res.data.errorCode == 200) {
           this.getData();
@@ -274,7 +311,8 @@ export default {
           el.appointmentDate = el.appointmentDate
             ? this.PF.parseDate(el.appointmentDate)
             : "-";
-          el.hasRead = el.hasRead ? "已读" : "未读";
+            console.log(el)
+          el.hasread = el.hasread ? "已读" : "未读";
           // el.appointmentDate =
         });
         this.dataLength = res.data.body.size;

@@ -181,6 +181,7 @@ export default {
         type: this._this_tabType
       });
       this.ajax.post("/monitorApi/orbitOfMinesOrCompany", param).then(res => {
+        this.$emit("sendTotal", res.data.body.totalquantity ? res.data.body.totalquantity : 0);
         this._trajectoryInit(false);
         this._changeMon(res.data.body);
         this.loading().close();
@@ -197,7 +198,7 @@ export default {
 
 <style lang="less" scoped>
 .carListActive {
-  background: #e9f4ff;
+  background: #99DEF9FF;
 }
 .trag {
   margin-top: 18px;
@@ -280,7 +281,7 @@ export default {
           float: left;
         }
         &:hover {
-          background: #fbf9ea;
+          background: #99DEF9FF;
           cursor: pointer;
         }
         .number {

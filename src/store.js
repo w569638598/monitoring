@@ -38,7 +38,8 @@ export default new Vuex.Store({
     _parentEventState: -1,
     _trajectoryState: false,
     globalVenderName: "",
-    _venderLoginId: "999"
+    _venderLoginId: "999",
+    _isShowRight: false
     //a5d77c301d4f44d698257116f6d4a3d4
     // getVenderId("venderLoginId")
   },
@@ -84,6 +85,9 @@ export default new Vuex.Store({
     },
     _changeDiverNumber(a, b){
       a._saveDiverInfo = b
+    },
+    _changeRightState(a, b){
+      a._isShowRight = b
     }
   },
   actions: {

@@ -2,7 +2,9 @@ import {
     wgs84tobd09
 } from "../src/assets/coordinate";
 
-
+/**
+ * 获取今日日期格式
+ */
 function getToDay() {
     let a = new Date();
     a = a.getFullYear() + "-" + ((a.getMonth() + 1) > 9 ? (a.getMonth() + 1) : "0" + (a.getMonth() + 1)) + "-" + (a.getDate() > 9 ? a.getDate() : "0" + a.getDate())
@@ -14,6 +16,10 @@ function formatNum(f, digit) {
     return parseInt(f * m, 10) / m;
 }
 
+/**
+ * 解析路径             转换为百度地图路径
+ * @param {*} arr 路径数组
+ */
 function parsePath(arr) {
     var scopePath = [];
     arr.forEach((el, i) => {
@@ -22,7 +28,11 @@ function parsePath(arr) {
     });
     return scopePath
 }
-
+/**
+ * 
+ * @param {*} obj 需要替换的对象
+ * @param {*} num 截取的长度
+ */
 function intercept(obj, num) {
     let arr = []
     obj.forEach(el => {
@@ -34,12 +44,17 @@ function intercept(obj, num) {
     })
     return arr;
 }
-
+/**时间戳转换日期
+ * @param a 时间戳
+ */
 function parseDate(a) {
     var date = new Date(a);
     return date.getFullYear() + "-" + ((date.getMonth() + 1) > 9 ? (date.getMonth() + 1) : "0" + (date.getMonth() + 1)) + "-" + (date.getDate() > 9 ? date.getDate() : "0" + date.getDate())
 }
 
+/**
+ * loading动画函数
+ */
 function loading(){
     this.$loading({
     lock: true,

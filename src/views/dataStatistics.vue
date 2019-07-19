@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="dataInfo fl-l">
+    <div class="dataInfo fl-l" :style="{width: leftWidth}">
       <div class="top">
         <img class="fl-l" src="../assets/images/flag.png" alt width="19px" height="29px;" />
         <span class="fl-l selectDate">选择日期</span>
@@ -139,7 +139,7 @@
         </div>
       </div>
     </div>
-    <right-data-list style="float: right" :pageType="pageType" @allData="getData"></right-data-list>
+    <right-data-list style="float: right" :pageType="pageType" @allData="getData" :total="total"></right-data-list>
   </div>
 </template>
 
@@ -201,7 +201,9 @@ export default {
         "已进厂",
         "围栏内"
       ],
-      polar: {}
+      polar: {},
+      leftWidth: "76%",
+      total: ''
     };
   },
   created() {
@@ -219,11 +221,15 @@ export default {
     _this_tabType: state => state._tabType,
     _this_venderList: state => state._venderList,
     _this_venderName: state => state._venderName,
-    _venderLoginId: state => state._venderLoginId
+    _venderLoginId: state => state._venderLoginId,
+    _isShowRight: state => state._isShowRight
   }),
   watch: {
     _this_tabType() {
       this.getData();
+    },
+    _isShowRight() {
+      this.leftWidth = this._isShowRight ? "100%" : "76%";
     },
     _this_venderName() {
       for (let key in this.copyData) {
@@ -525,15 +531,15 @@ export default {
           this._changeVender(vl);
           let a = res.data.body.result;
           a.forEach((el, i) => {
-            for(let k in el){
-              if(k.length > 15){
+            for (let k in el) {
+              if (k.length > 15) {
                 let s = el[k];
                 let kk = k.replace(k.slice(15), "...");
                 delete el[k];
                 el[kk] = s;
               }
             }
-          })
+          });
           this.copyData = res.data.body.result;
           this.parseData(res.data.body.result);
           this.loading().close();
@@ -573,6 +579,7 @@ export default {
   width: 76%;
   margin-left: 4%;
   border-right: solid 1px #ccc;
+  transition: width .6s;
   .top {
     height: 60px;
     border-bottom: dashed 1px #ccc;
@@ -592,7 +599,7 @@ export default {
     }
     .fl-r {
       line-height: 60px;
-      margin-right: 20px;
+      margin-right: 120px;
     }
   }
   .table {

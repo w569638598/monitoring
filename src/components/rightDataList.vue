@@ -1,14 +1,17 @@
 <template>
   <!-- 右边数据列表 -->
-  <div class="rightBox">
-    <div class="tabNavBg"></div>
-    <ul class="navBox">
+  <div class="rightBox" :style="{right: right}">
+    <!-- <div class="tabNavBg"></div> -->
+    <ul class="navBox" :style="{right: rightNavposition}">
       <li
         v-for="(item, index) in rightNav"
         :key="index"
         @click="tabFn(index)"
         :class="{active: tabI == index}"
-      >{{item}}</li>
+      >
+        {{item}}
+        <span v-if="tabI == index && (total !== ''|| total)">{{total}}</span>
+      </li>
     </ul>
     <div class="tabC">
       <div v-if="tabI == 0">
@@ -25,7 +28,7 @@
           class="title bc-b"
           @click="getAllData(a)"
         >全部供应单位</p>
-        <right-list :pageType="pageType"></right-list>
+        <right-list :pageType="pageType" @sendTotal="getTotal"></right-list>
       </div>
     </div>
   </div>
@@ -34,24 +37,38 @@
 <script>
 import RightList from "./rightList";
 import { mapState, mapMutations } from "vuex";
+import { constants } from "crypto";
 export default {
-  props: ["pageType"],
+  props: ["pageType", "total"],
   data() {
     return {
-      rightNav: ["矿点分类", "供应单位分类"],
+      rightNav: ["矿点分类", "供应单位分类", ">>"],
       tabI: 0,
       date: "",
       mineralI: -1,
-      a: ""
+      a: "",
+      right: "0",
+      rightNavposition: "20%",
+      isShowRight: this._isShowRight
     };
   },
   components: {
     RightList
   },
+  created() {
+    if (this.pageType === "dataStatistics") {
+      this.rightNav.pop();
+    }
+  },
   computed: mapState({
-    _venderLoginId: state => state._venderLoginId
+    _venderLoginId: state => state._venderLoginId,
+    _isShowRight: state => state._isShowRight
   }),
   methods: {
+    getTotal(a) {
+      console.log("--------");
+      console.log(a);
+    },
     ...mapMutations([
       "_changeMon",
       "_changeCarPoint",
@@ -80,6 +97,7 @@ export default {
           .then(res => {
             this._changeMon(res.data.body);
             var carList = [];
+            this.total = res.data.body.totalquantity;
             res.data.body.resultList.forEach((el, i) => {
               for (let i = 0; i < el.carList.length; i++) {
                 if (el.carList[i].lat == "") {
@@ -99,6 +117,23 @@ export default {
       }
     },
     tabFn(i) {
+      if (i === 2) {
+        this.isShowRight = !this.isShowRight;
+        this.right = this.isShowRight ? "-20%" : "0";
+        this.rightNavposition = this.isShowRight ? "0" : "20%";
+        this.$store.commit("_changeRightState", this.isShowRight);
+        this.rightNav[2] = this.isShowRight ? "<<" : ">>";
+        return;
+      }
+      if (this.pageType === "dataStatistics") {
+        
+      } else {
+        this.isShowRight = false;
+        this.right = this.isShowRight ? "-20%" : "0";
+        this.rightNavposition = this.isShowRight ? "0" : "20%";
+        this.$store.commit("_changeRightState", this.isShowRight);
+        this.rightNav[2] = this.isShowRight ? "<<" : ">>";
+      }
       this.$store.commit("_parentEvent", "allData");
       this.tabI = i;
       this.a = i;
@@ -119,6 +154,9 @@ export default {
   width: 20%;
   height: 896px;
   overflow: auto;
+  position: fixed;
+  transition: right 0.6s;
+  top: 72px;
   .tabNavBg {
     background: #f0f4ff;
     height: 46px;
@@ -126,35 +164,66 @@ export default {
   }
   .navBox {
     z-index: 2;
-    overflow: hidden;
-    position: relative;
-    top: -44px;
+    // position: relative;
+    position: fixed;
+    // word-wrap: ;
+    transition: right 0.6s;
+    top: 112px;
+    // top: -44px;
     li {
-      display: block;
-      float: left;
-      text-align: center;
-      height: 32px;
-      line-height: 32px;
-      position: relative;
-      margin-top: 12px;
+      writing-mode: tb-rl;
       cursor: pointer;
-      &:first-child {
-        width: 42%;
-        margin-left: 4%;
+      width: 40px;
+      text-align: center;
+      line-height: 40px;
+      height: 180px;
+      background: #cfcfcfff;
+      border-radius: 5px 0 0 5px;
+      color: #666666ff;
+      font-size: 18px;
+      letter-spacing: 3px;
+      position: relative;
+      &:nth-child(3) {
+        writing-mode: horizontal-tb;
+        height: 100px;
+        line-height: 100px;
+        letter-spacing: 0;
+        font-size: 18px;
+        color: #0671af;
+        background: rgba(0, 0, 0, 0.15);
+        margin-top: 50px !important;
+        letter-spacing: -3px;
       }
-      &:last-child {
-        width: 54%;
+      &:nth-child(3),
+      &:nth-child(2) {
+        // width: 54%;
+        margin-top: 50px;
       }
       &.active {
-        background: white;
-        border-radius: 3px;
-        border: solid 1px #ccc;
-        border-bottom: none;
+        background: #01a7f7ff;
+        color: white;
+        font-size: 22px;
+      }
+      span {
+        position: absolute;
+        writing-mode: horizontal-tb;
+        top: -18px;
+        left: -14px;
+        background: #0d597d;
+        font-weight: bold;
+        font-family: myfont;
+        border-radius: 50px;
+        height: 36px;
+        width: 36px;
+        line-height: 36px;
+        letter-spacing: 0;
+        display: block;
+        font-size: 14px;
       }
     }
   }
   .tabC {
-    margin-top: -20px;
+    margin: 24px auto;
     .title {
       color: white;
       text-align: center;
@@ -163,6 +232,10 @@ export default {
       font-size: 18px;
       margin-top: 0;
       cursor: pointer;
+      width: 86%;
+      margin: 0 auto 20px;
+      background: linear-gradient(90deg, #1dbfec, #0478d0);
+      border-radius: 5px;
     }
     .dataList {
       & > li {

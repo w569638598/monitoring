@@ -1,7 +1,7 @@
 <template>
   <div class="montioring">
-    <div class="map po-re">
-      <div class="info bc-g po-ab">
+    <div class="map po-re" :style="{width: mapWidth}">
+      <div class="info po-ab" :style="{backgroundSize: infoBgSize}">
         <span>
           预报卸货
           <span class="text">{{_this_data.supplynum ? _this_data.supplynum : 0}}</span>辆
@@ -79,12 +79,14 @@
           @click="infoWindowOpen(i)"
           :icon="carIcon"
           :carLabelIndex="carLabelIndex"
+          animation="BMAP_ANIMATION_BOUNCE"
         >
           <bm-label
             :content="el.divernumber"
             :labelStyle="{color: 'red', fontSize : '12px', zInde: 99999999}"
-            :offset="{width: 0, height: -25}"
+            :offset="{width: 30, height: -35}"
             :zIndex="labelIndex"
+            animation="BMAP_ANIMATION_BOUNCE"
           />
           <bm-info-window
             :show="carLabelIndex == i"
@@ -122,7 +124,7 @@
 
     <!-- 右边数据列表 -->
 
-    <right-data-list :pageType="pageType"></right-data-list>
+    <right-data-list :pageType="pageType" :total="total"></right-data-list>
   </div>
 </template>
 
@@ -161,7 +163,10 @@ export default {
       polyline1: [],
       polyline2: [],
       polyline3: [],
-      carArr: []
+      carArr: [],
+      mapWidth: "80%",
+      infoBgSize: "100% 100%",
+      total: ""
     };
   },
   watch: {
@@ -174,6 +179,10 @@ export default {
         this.center.lat = this._this_carList[0].lat;
         this.center.lng = this._this_carList[0].lon;
       }
+    },
+    _isShowRight(){
+      this.mapWidth = this._isShowRight ? "100%" : "80%";
+      this.infoBgSize = "100% 100%"
     }
   },
   components: {
@@ -185,7 +194,8 @@ export default {
     _this_carLabelState: state => state._carLabelState,
     _this_carLabelIndex: state => state._carLabelIndex,
     _MINERAL_ONCLICK: state => state.MINERAL_ONCLICK,
-    _venderLoginId: state => state._venderLoginId
+    _venderLoginId: state => state._venderLoginId,
+    _isShowRight: state => state._isShowRight
   }),
   methods: {
     infoWindowOpen(i) {
@@ -226,7 +236,9 @@ export default {
       this.ajax
         .post("monitorApi/monitorInTransitAndLocation", postData)
         .then(res => {
+          
           if(res.data.errorCode == 200){
+            this.total = res.data.body.totalquantity;
           this.center = {
             lng: res.data.body.resultList[0].carList[0].lon,
             lat: res.data.body.resultList[0].carList[0].lat
@@ -273,6 +285,8 @@ export default {
           });
           this._changeMon(res.data.body);
           this._changeCarPoint(carList);
+          }else{
+            this.total = 0
           }
           this.loading().close();
         })
@@ -310,7 +324,7 @@ export default {
   }
   .map {
     width: 80%;
-
+          transition: width .6s;
     .info {
       color: white;
       display: flex;
@@ -318,10 +332,14 @@ export default {
       top: 0;
       height: 42px;
       z-index: 9;
-      width: 60%;
-      left: 20%;
-      border-radius: 0 0 36px 36px;
-      span {
+      width: 1065px;
+      left: 50%;
+      margin-left: -526px;
+      // margin: 0 auto;
+      background-size: 100% 100%;
+      background: url('../assets/images/top-bg.png') 0 center no-repeat;
+      padding: 0 72px;
+      & > span {
         display: inline;
       }
       .text {

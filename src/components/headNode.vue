@@ -36,9 +36,14 @@ import { mapState } from "vuex";
 export default {
   data() {
     return {
-      nav: ["在途监控", "数据统计", "行驶轨迹", "报警信息"],
+      nav: ["在途监控", "数据统计", "行驶轨迹", "报警管理"],
       navIndex: 0,
-      router: ["/monitoring", "/datastatistics", "/trajectory", "/warning/warning"],
+      router: [
+        "/monitoring",
+        "/datastatistics",
+        "/trajectory",
+        "/warning/warning"
+      ],
       autoPageState: false,
       timer: null
     };
@@ -46,7 +51,7 @@ export default {
   computed: mapState(["globalVenderName"]),
   watch: {
     $route() {
-      const routerPath = this.$route.path.slice(1);
+      const routerPath = this.$route.path;
       this.router.forEach((el, i) => {
         if (routerPath == el) {
           this.navIndex = i;
@@ -88,23 +93,34 @@ export default {
 
 <style lang='less' scoped>
 .active {
-  color: #1296db !important;
-  font-size: 21px;
+  color: rgba(255,255,255, 1) !important;
+  font-size: 24px;
+  vertical-align: text-bottom;
+  // background: white;
 }
 .top {
   padding: 0 12px;
+  // background: linear-gradient(90deg,#1fc8f9 50%, #0672af);
+  background: #0671af;
   box-sizing: border-box;
   height: 72px;
-  border-bottom: solid 1px #ccc;
   overflow: hidden;
   nav {
     margin-right: 6%;
     font-family: myfont;
     font-size: 16px;
     & > * {
-      margin: 0 40px;
+      transform: color 0.3s;
+      padding: 0 20px;
+      margin: 0 20px;
       cursor: pointer;
-      color: #333;
+      color: rgba(255,255,255,1);
+      height: 100%;
+      display: block;
+      float: left;
+      &:hover{
+        color: rgba(255,255,255,.6);
+      }
     }
   }
   .close {
@@ -112,7 +128,7 @@ export default {
     cursor: pointer;
   }
   .companyName {
-    color: #1296db;
+    color: #fff;
     font-size: 30px;
     position: relative;
     margin-left: 20px;
@@ -124,7 +140,7 @@ export default {
       display: block;
       width: 8px;
       height: 30px;
-      background: #1296db;
+      background: #fff;
       position: absolute;
       top: 20px;
       left: -20px;

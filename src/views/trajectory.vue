@@ -71,7 +71,7 @@
       </baidu-map>
     </div>
     <!-- 右边数据列表 -->
-    <right-data-list :pageType="pageType"></right-data-list>
+    <right-data-list :pageType="pageType" :total="total"></right-data-list>
 
     <el-dialog title="历史轨迹" :visible.sync="dialogVisible" width="60%">
       <el-table :data="tableData" style="width: 100%">
@@ -145,7 +145,8 @@ export default {
       },
       marker2: 10,
       marker1: 20,
-      lushuZIndex: 2
+      lushuZIndex: 2,
+      total: ""
     };
   },
   components: {
@@ -188,13 +189,16 @@ export default {
         .post("/monitorApi/orbitOfHistoryInFactoryList", param)
         .then(res => {
           if (res.data.errorCode == 200) {
+            this.total = res.data.body.totalquantity;
             this.tableData = res.data.body.resultList;
             this.total = res.data.body.resultList.length;
             this.total = res.data.body.size;
           }else{
-
+            this.total = 0;
           }
+          console.log(this.total)
         });
+
         this.loading().close();      
     },
     lockPath(a, b) {

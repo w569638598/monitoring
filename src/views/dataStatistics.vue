@@ -26,7 +26,7 @@
       <div class="table">
         <p class="title">{{_this_venderName ? _this_venderName : "当日全部矿点"}}</p>
 
-        <div class="dataList">
+        <div class="dataList" style="background: #c23531;">
           <p>当日预报</p>
           <div>
             <div class="fl-l">
@@ -40,7 +40,7 @@
           </div>
         </div>
 
-        <div class="dataList">
+        <div class="dataList" style="background: rgb(36, 115, 168)">
           <p>当日预约</p>
           <div>
             <div class="fl-l">
@@ -54,7 +54,7 @@
           </div>
         </div>
 
-        <div class="dataList">
+        <div class="dataList" style="background: #3794A0;">
           <p>在途中</p>
           <div>
             <div class="fl-l">
@@ -68,7 +68,7 @@
           </div>
         </div>
 
-        <div class="dataList">
+        <div class="dataList" style="background: #EA6E42;">
           <p>排队中</p>
           <div>
             <div class="fl-l">
@@ -82,7 +82,7 @@
           </div>
         </div>
 
-        <div class="dataList">
+        <div class="dataList" style="background: #45A4D6;">
           <p>已进厂</p>
           <div>
             <div class="fl-l">
@@ -96,7 +96,7 @@
           </div>
         </div>
 
-        <div class="dataList">
+        <div class="dataList" style="background: #51A26D;">
           <p>围栏内</p>
           <div>
             <div class="fl-l">
@@ -612,6 +612,7 @@ export default {
       text-align: center;
       height: 136px;
       border-radius: 6px;
+      color: white;
       & > div > div {
         width: 50%;
         text-align: center;

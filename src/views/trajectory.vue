@@ -1,6 +1,6 @@
 <template>
   <div class="montioring">
-    <div class="map po-re">
+    <div class="map po-re" :style="{width: mapWidth}">
       <div v-if="_trajectoryState" class="info po-ab" :class="{closeState: closeState}">
         <div class="carN">{{_saveDiverInfo.diverNumber}}</div>
         <div class="date">
@@ -146,7 +146,8 @@ export default {
       marker2: 10,
       marker1: 20,
       lushuZIndex: 2,
-      total: ""
+      total: "",
+      mapWidth: "80%"
     };
   },
   components: {
@@ -158,7 +159,8 @@ export default {
     _saveDiverInfo: state => state._saveDiverInfo,
     _lushuPath: state => state._lushuPath,
     _trajectoryState: state => state._trajectoryState,
-    _venderLoginId: state => state._venderLoginId
+    _venderLoginId: state => state._venderLoginId,
+    _isShowRight: state => state._isShowRight
   }),
   watch: {
     _lushuPath() {
@@ -174,6 +176,10 @@ export default {
       if (!this._trajectoryState) {
         this.path = [];
       }
+    },
+        _isShowRight(){
+          console.log(this._isShowRight)
+      this.mapWidth = this._isShowRight ? "100%" : "80%";
     }
   },
   methods: {
@@ -280,6 +286,7 @@ export default {
   }
   .map {
     width: 80%;
+    transition: width .6s;
     .info {
       color: white;
       display: flex;

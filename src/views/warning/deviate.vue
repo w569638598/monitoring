@@ -11,13 +11,13 @@
       ></el-date-picker>
       <el-select v-model="mine" placeholder="选择矿点" style="width: 180px" class="fl-l">
         <el-option
-          v-for="item in mineData"
-          :key="item.value"
+          v-for="(item, i) in mineData"
+          :key="i"
           :label="item.label"
           :value="item.value"
         ></el-option>
       </el-select>
-      <span class="fl-l searchBtn">查找</span>
+      <span class="fl-l searchBtn" @click="getMineList">查找</span>
       <span class="fl-r" @click="addMine">+&nbsp;新增矿点围栏</span>
     </div>
     <el-table
@@ -28,23 +28,18 @@
       @selection-change="handleSelectionChange"
       :stripe="stripe"
       :border="border"
-      @select="selectFn"
     >
-      <el-table-column type="selection" width="80"></el-table-column>
       <el-table-column label="序号" width="120">
         <template slot-scope="scope">{{ scope.$index+1 }}</template>
       </el-table-column>
-      <el-table-column prop="platenum" label="车牌号"></el-table-column>
-      <el-table-column prop="appointmentDate" label="预约卸货时间"></el-table-column>
-      <el-table-column prop="mines" label="预约矿点"></el-table-column>
-      <el-table-column prop="commandmsg" label="报警类型"></el-table-column>
-      <el-table-column prop="eventtime" label="报警时间"></el-table-column>
-      <el-table-column prop="hasRead" label="状态" width="120"></el-table-column>
+      <el-table-column prop="mines" label="矿点名称"></el-table-column>
+      <el-table-column prop="status" label="状态"></el-table-column>
+      <el-table-column prop="createDate" label="创建时间"></el-table-column>
       <el-table-column label="操作" show-overflow-tooltip>
         <template slot-scope="scope">
           <span v-if="scope.row.hasRead == '已读'"></span>
-          <span v-else @click="operationread(scope.row, scope.$index)">标记为已读</span>
-          <span @click="operationInfo(scope.row)">详情</span>
+          <span v-else @click="operationread(scope.row, scope.$index)">修改</span>
+          <span @click="operationInfo(scope.row)">删除</span>
         </template>
       </el-table-column>
     </el-table>
@@ -68,14 +63,10 @@
           :style="{width: width,height: height}"
           :scroll-wheel-zoom="true"
           @click="paintPolyline"
-          @mousemove="syncPolyline"
           @rightclick="newPolyline"
         >
           <bm-marker v-for="(item, i) of markerPointArr" :position="item" :key="i"></bm-marker>
-          <!-- <bm-control>
-            <button @click="toggle('polyline')">{{ polyline.editing ? '停止绘制' : '开始绘制' }}</button>
-          </bm-control>-->
-          <bm-polyline :path="path" v-for="path of polyline.paths"></bm-polyline>
+          <bm-polyline :path="path" v-for="(path, i) of polyline.paths" :key="i"></bm-polyline>
         </baidu-map>
 
         <span class="po-ab positionDiv" @click="mapPosition, toggle('polyline')">
@@ -105,22 +96,14 @@
           <img src="../../assets/images/mapToolIcon/enlarge-c.png" alt />
         </span>
 
-        <span class="po-ab reset" @click="endPainting">
+        <span class="po-ab reset" @click="cleanMapOverlay">
           <!-- <img src="../../assets/images/mapToolIcon/enlarge.png" alt />
           <img src="../../assets/images/mapToolIcon/enlarge-c.png" alt />-->
           <img src="../../assets/images/mapToolIcon/reset.png" alt width="30px;" />
         </span>
-        <span class="po-ab done" style="background: none;">
-        <img
-          src="../../assets/images/mapToolIcon/commit.png"
-          alt
-          width="80px;"
-        />
-        <img
-          src="../../assets/images/mapToolIcon/commit-c.png"
-          alt
-          width="80px;"
-        />
+        <span class="po-ab done" style="background: none;" @click="commit">
+          <img src="../../assets/images/mapToolIcon/commit.png" alt width="80px;" />
+          <img src="../../assets/images/mapToolIcon/commit-c.png" alt width="80px;" />
         </span>
         <!-- <img src="../../assets/images/mapToolIcon/enlarge.png" alt />
         <img src="../../assets/images/mapToolIcon/enlarge-c.png" alt />-->
@@ -146,6 +129,9 @@
 </template>
 
 <script>
+import { constants } from "crypto";
+import { mapState } from "vuex";
+import { setTimeout } from "timers";
 export default {
   data() {
     return {
@@ -200,35 +186,73 @@ export default {
     };
   },
   mounted() {
-    this.markerPointArr.push(this.mapPoint);
-    console.log(this.markerPointArr);
+    // this.markerPointArr.push(this.mapPoint);
+    const arr = [131, 6, 2, 4, 12, 52, 31, 42, 51, 424, 13213];
+    this.getMineList();
+    this.getMines();
+    // console.log(this.quickSort(arr));
   },
   methods: {
+    commit() {
+      var str = "";
+      this.polyline.paths[0].forEach((el, i) => {
+        for (let i in el) {
+          if (i == "lng" || i == "lat") {
+            if (i == "lng") {
+              str += el[i] + "_";
+            } else {
+              str += el[i] + ",";
+            }
+          }
+        }
+      });
+      str = str.substring(0, str.lastIndexOf(","));
+      let param = this.qs.stringify({
+        venderId: this._venderLoginId,
+        //this._globalVenderName
+        venderName: "云到收费",
+        mines: this.mine,
+        polygon: str
+      });
+      this.ajax
+        .post("/monitorApi/addOrUpdateVenderMinesEnclosure", param)
+        .then(res => {
+          if (res.data.errorCode == 200) {
+            this.$alert("添加成功").then(res => {
+              this.isShow = false;
+            });
+          }
+        });
+    },
+    getMines() {
+      let param = this.qs.stringify({
+        vendername: "云到收费",
+        status: 1
+      });
+      this.mineData = [];
+      this.ajax.post("/monitorApi/query_venderMineral", param).then(res => {
+        res.data.body.resultList.forEach((el, i) => {
+          var obj = {};
+          obj.label = el.mineralName;
+          obj.value = el.mineralName;
+          this.mineData.push(obj);
+        });
+      });
+    },
     cleanMapOverlay() {
       this.polyline.paths = [];
       this.markerPointArr = [];
     },
     toggle(name) {
+      if (this.mine == "") {
+        this.$alert("请选择矿点");
+        return;
+      }
       this[name].editing = !this[name].editing;
-      console.log(this.polyline.paths);
-    },
-    syncPolyline(e) {
-      // console.log(this.polyline.editing)
-      // if (!this.polyline.editing) {
-      //   return
-      // }
-      // const {paths} = this.polyline
-      // if (!paths.length) {
-      //   return
-      // }
-      // const path = paths[paths.length - 1]
-      // if (!path.length) {
-      //   return
-      // }
-      // if (path.length === 1) {
-      //   path.push(e.point)
-      // }
-      // this.$set(path, path.length - 1, e.point)
+      if (!this[name].editing) {
+        this.polyline.paths[0].push(this.polyline.paths[0][0]);
+        this.markerPointArr = [];
+      }
     },
     newPolyline(e) {
       if (!this.polyline.editing) {
@@ -254,11 +278,6 @@ export default {
       paths[paths.length - 1].push(e.point);
     },
     handleSelectionChange() {},
-    selectFn(selection, row) {
-      selection.forEach(el => {
-        this.ids.push(el.id);
-      });
-    },
     addMine() {
       this.isShow = true;
     },
@@ -276,7 +295,8 @@ export default {
         sortBy: this.sortDate,
         pagesNo: a ? a - 1 : 0
       });
-      this.ajax.post("monitorApi/getWaringList ", param).then(res => {
+      this.ajax.post("monitorApi/getWaringList", param).then(res => {
+        console.log(res);
         res.data.body.result.forEach(el => {
           el.appointmentDate = el.appointmentDate
             ? this.PF.parseDate(el.appointmentDate)
@@ -292,7 +312,6 @@ export default {
       if (!this.polyline.editing) {
         return;
       }
-      console.log(this.polyline.paths[0]);
       this.polyline.paths[0].pop();
       this.markerPointArr.pop();
     },
@@ -310,13 +329,41 @@ export default {
       }
       this.zoom -= 2;
     },
-    endPainting() {
-      this.polyline.editing = false;
-      this.polyline.paths[0].push(this.polyline.paths[0][0]);
-      // this.markerPointArr.push(this.markerPointArr[0]);
-      this.markerPointArr = [];
+    getMineList(a) {
+      let param = this.qs.stringify({
+        venderId: this._venderLoginId,
+        createDate: this.sDate,
+        pagesNo: a ? a : 0,
+        mines: this.mine
+      });
+      this.ajax
+        .post("/monitorApi/getVenderMinesEnclosureList", param)
+        .then(res => {
+          this.tableData = res.data.body.list;
+        });
+    },
+    quickSort(arr) {
+      if (arr.length <= 1) {
+        return arr;
+      }
+      var midI = Math.floor((arr.length - 1) / 2);
+      var mid = arr.splice(midI, 1)[0];
+      var left = [];
+      var right = [];
+      for (var i = 0; i < arr.length; i++) {
+        if (arr[i] < mid) {
+          left.push(arr[i]);
+        } else {
+          right.push(arr[i]);
+        }
+      }
+      return this.quickSort(left).concat([mid], this.quickSort(right));
     }
-  }
+  },
+  computed: mapState({
+    _venderLoginId: state => state._venderLoginId,
+    _globalVenderName: state => state.globalVenderName
+  })
 };
 </script>
 
@@ -333,6 +380,7 @@ export default {
   }
   .el-dialog__header {
     background: #0671af;
+    padding: 10px;
     .el-dialog__title,
     .el-dialog__close {
       color: white;
@@ -414,20 +462,20 @@ export default {
 .done {
   left: 20px;
   bottom: 80px;
-  & img{
-    &:nth-child(1){
-      display: none
+  & img {
+    &:nth-child(1) {
+      display: none;
     }
-    &:nth-child(2){
-      display: block
+    &:nth-child(2) {
+      display: block;
     }
   }
-  &:hover img{
-    &:nth-child(1){
-      display: block
+  &:hover img {
+    &:nth-child(1) {
+      display: block;
     }
-    &:nth-child(2){
-      display: none
+    &:nth-child(2) {
+      display: none;
     }
   }
 }

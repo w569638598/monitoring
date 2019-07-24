@@ -21,7 +21,8 @@
 
 <script>
 import { mapState } from "vuex";
-
+import axios from "axios";
+import { setTimeout } from "timers";
 export default {
   data() {
     return {
@@ -37,6 +38,32 @@ export default {
         "设置"
       ]
     };
+  },
+  computed: mapState({
+    _venderLoginId: state => state._venderLoginId
+  }),
+  async beforeRouteUpdate(to, from, next) {
+    if (to.path === "/warning/deviate") {
+      const a = await this.$prompt("请输入6位有效口令", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        callback: async (a,b) => {
+           let param = this.qs.stringify({
+          venderId: this._venderLoginId,
+          command: b.inputValue.toLowerCase()
+        });
+        var res = await axios.post("/monitorApi/checkCommand", param);
+        if(res.data.errorCode == 200){
+          next()
+        }else{
+          this.$alert("口令有误")
+          next(false)
+        }
+        }
+      });
+    } else {
+      next();
+    }
   },
   methods: {
     navClick(i) {
@@ -67,36 +94,34 @@ export default {
       }
       this.active = i;
     }
-
   }
 };
 </script>
 <style lang="less">
-.right{
+.right {
   width: calc(98% - 210px);
   margin-left: 2%;
 }
-.r-title{
-  color: #1296DBFF;
+.r-title {
+  color: #1296dbff;
   font-size: 14px;
   position: relative;
-  &::before{
-    content: '';
+  &::before {
+    content: "";
     display: block;
     width: 3px;
     height: 13px;
-    background: #1296DBFF;
+    background: #1296dbff;
     position: absolute;
     left: -10px;
     top: 3px;
-
   }
 }
-.soonOnline{
-    display: block;
-    margin: 0 auto;
-    width: 746px;
-    margin-top: 120px;
+.soonOnline {
+  display: block;
+  margin: 0 auto;
+  width: 500px;
+  margin-top: 120px;
 }
 .el-dialog__body {
   padding-top: 20px;

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div id="deviateDialog">
     <div class="selectBox">
       <span class="fl-l">筛选：</span>
       <el-date-picker
@@ -10,12 +10,7 @@
         class="fl-l"
       ></el-date-picker>
       <el-select v-model="mine" placeholder="选择矿点" style="width: 180px" class="fl-l">
-        <el-option
-          v-for="(item, i) in mineData"
-          :key="i"
-          :label="item.label"
-          :value="item.value"
-        ></el-option>
+        <el-option v-for="(item, i) in mineData" :key="i" :label="item.label" :value="item.value"></el-option>
       </el-select>
       <span class="fl-l searchBtn" @click="getMineList">查找</span>
       <span class="fl-r" @click="addMine">+&nbsp;新增矿点围栏</span>
@@ -33,13 +28,21 @@
         <template slot-scope="scope">{{ scope.$index+1 }}</template>
       </el-table-column>
       <el-table-column prop="mines" label="矿点名称"></el-table-column>
-      <el-table-column prop="status" label="状态"></el-table-column>
+      <el-table-column prop="status" label="状态">
+        <template slot-scope="scope">
+          <span
+            class="statusBtn"
+            @click="editorStatus(scope.row)"
+            v-if="scope.row.status === '开启'"
+          >关闭</span>
+          <span class="statusBtn" @click="editorStatus(scope.row)" v-else>开启</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="createDate" label="创建时间"></el-table-column>
       <el-table-column label="操作" show-overflow-tooltip>
         <template slot-scope="scope">
-          <span v-if="scope.row.hasRead == '已读'"></span>
-          <span v-else @click="operationread(scope.row, scope.$index)">修改</span>
-          <span @click="operationInfo(scope.row)">删除</span>
+          <span class="editorBtn fc-g" @click="editor(scope.row, scope.$index)">修改</span>
+          <span class="deleteBtn fc-r" @click="deleteFn(scope.row)">删除</span>
         </template>
       </el-table-column>
     </el-table>
@@ -49,24 +52,22 @@
       layout="prev, pager, next"
       :page-size="pageSize"
       :current-page="currentPage"
-      :total="dataLength"
-      @current-change="getData"
+      :total="total"
+      @current-change="getMineList"
     ></el-pagination>
 
-    <el-dialog :visible.sync="isShow" title="新增围栏" class="deviateDialog">
+    <el-dialog :visible.sync="isShow" title="新增围栏" class="deviateDialog" @close="dialogClose">
       <div class="po-re">
         <baidu-map
-          :class="{isShow: isShow}"
           class="map"
           :center="mapPoint"
           :zoom="zoom"
           :style="{width: width,height: height}"
           :scroll-wheel-zoom="true"
           @click="paintPolyline"
-          @rightclick="newPolyline"
         >
           <bm-marker v-for="(item, i) of markerPointArr" :position="item" :key="i"></bm-marker>
-          <bm-polyline :path="path" v-for="(path, i) of polyline.paths" :key="i"></bm-polyline>
+          <bm-polyline :path="polyline.paths"></bm-polyline>
         </baidu-map>
 
         <span class="po-ab positionDiv" @click="mapPosition, toggle('polyline')">
@@ -81,43 +82,45 @@
         >结束</span>
         <span v-else class="po-ab positionDiv" @click="mapPosition, toggle('polyline')">绘制</span>
 
-        <span class="po-ab backDiv" @click="back">
+        <span class="po-ab backDiv" @click="back" title="撤销">
           <!-- <img src="../../assets/images/mapToolIcon/back.png" alt /> -->
           <img src="../../assets/images/mapToolIcon/back-c.png" alt />
         </span>
 
         <span v-if="zoomState" class="po-ab narrowDiv" @click="narrow">
           <!-- <img src="../../assets/images/mapToolIcon/narrow.png" alt /> -->
-          <img src="../../assets/images/mapToolIcon/narrow-c.png" alt />
+          <img src="../../assets/images/mapToolIcon/narrow-c.png" title="缩放地图" alt />
         </span>
 
         <span v-else class="po-ab enlargeDiv" @click="enlarge">
           <!-- <img src="../../assets/images/mapToolIcon/enlarge.png" alt /> -->
-          <img src="../../assets/images/mapToolIcon/enlarge-c.png" alt />
+          <img src="../../assets/images/mapToolIcon/enlarge-c.png" title="缩放地图" alt />
         </span>
 
         <span class="po-ab reset" @click="cleanMapOverlay">
           <!-- <img src="../../assets/images/mapToolIcon/enlarge.png" alt />
           <img src="../../assets/images/mapToolIcon/enlarge-c.png" alt />-->
-          <img src="../../assets/images/mapToolIcon/reset.png" alt width="30px;" />
+          <img src="../../assets/images/mapToolIcon/reset.png" title="删除围栏" alt width="30px;" />
         </span>
-        <span class="po-ab done" style="background: none;" @click="commit">
-          <img src="../../assets/images/mapToolIcon/commit.png" alt width="80px;" />
-          <img src="../../assets/images/mapToolIcon/commit-c.png" alt width="80px;" />
+        <span class="po-ab done" @click="commit">
+          <!-- <img src="../../assets/images/mapToolIcon/commit.png" alt width="80px;" />
+          <img src="../../assets/images/mapToolIcon/commit-c.png" alt width="80px;" />-->
+          提交
         </span>
         <!-- <img src="../../assets/images/mapToolIcon/enlarge.png" alt />
         <img src="../../assets/images/mapToolIcon/enlarge-c.png" alt />-->
         <!-- 保存 -->
 
-        <div class="mapAboveSearch po-ab">
-          <el-select v-model="mine" placeholder="选择矿点" class="fl-l">
+        <div class="mapAboveSearch po-ab" v-if="operationType === 'add'">
+          <el-select v-model="mapMine" placeholder="选择矿点" class="fl-l">
             <el-option
-              v-for="item in mineData"
-              :key="item.value"
+              v-for="(item, i) in mineData"
+              :key="i"
               :label="item.label"
               :value="item.value"
             ></el-option>
           </el-select>
+          <el-input class="carNumber" placeholder="输入经纬度，并用','分隔" v-model="addressOrPoint" clearable @change="addrOrPoint"></el-input>
         </div>
       </div>
       <!-- <div class="btn">
@@ -137,11 +140,12 @@ export default {
     return {
       pageSize: 10,
       currentPage: 0,
-      dataLength: null,
+      total: null,
       stripe: true,
       border: true,
       tableData: [],
       zoomState: true,
+      addressOrPoint: '',
       mineData: [
         {
           label: "请选择报警类型",
@@ -170,7 +174,8 @@ export default {
       ],
       markerPointArr: [],
       mine: "",
-      sDate: this.PF.getToDay(),
+      mapMine: "",
+      sDate: "",
       isShow: false,
       mapPoint: {
         lat: 39,
@@ -182,7 +187,9 @@ export default {
       polyline: {
         editing: false,
         paths: []
-      }
+      },
+      operationType: "add",
+      editorId: ""
     };
   },
   mounted() {
@@ -193,9 +200,83 @@ export default {
     // console.log(this.quickSort(arr));
   },
   methods: {
+    addrOrPoint(){
+      if(this.addressOrPoint == ''){
+        return;
+      }
+      let reg = /^[\u4e00-\u9fa5]+$/
+      if(reg.test(this.addressOrPoint)){
+        this.$alert("请输入经纬度");
+        return
+      }
+      if(this.addressOrPoint.indexOf(",") < 0){
+        this.$alert("经纬度用','号分隔");
+        return
+      }
+      this.mapPoint.lng = this.addressOrPoint.split(",")[0];
+      this.mapPoint.lat = this.addressOrPoint.split(",")[1];
+    },
+    dialogClose() {
+      this.polyline.paths = [];
+      this.markerPointArr = [];
+      this.mapMine = "";
+    },
+    editorStatus(a) {
+      let param = this.qs.stringify({
+        id: a.id,
+        status: a.status == "开启" ? 0 : 1
+      });
+      this.ajax
+        .post("/monitorApi/updateVenderMinesEnclosureStatus", param)
+        .then(res => {
+          if (res.data.errorCode == 200) {
+            this.$alert("修改成功").then(res => {
+              this.getMineList();
+            });
+          }
+        });
+    },
+    editor(a) {
+      this.operationType = "editor";
+      this.isShow = true;
+      this.polyline.paths = this.parsePath(a.enclosure);
+      this.mapPoint = this.polyline.paths[0];
+      console.log(this.polyline.paths[0]);
+      this.mapMine = a.mines;
+      this.editorId = a.id;
+      // console.log(this.mapPoint)
+      // this.zoom = 10;
+      // this.mapPoint.lng = this.polyline.paths[0].lng;
+      // this.mapPoint.lat = this.polyline.paths[0].lat;
+    },
+    deleteFn(a) {
+      let param = this.qs.stringify({
+        id: a.id
+      });
+      this.ajax
+        .post("/monitorApi/deleteVenderMinesEnclosure", param)
+        .then(res => {
+          if (res.data.errorCode == 200) {
+            this.$alert("删除成功").then(res => {
+              this.getMineList();
+            });
+          }
+        });
+    },
     commit() {
+      if (this.polyline.paths.length == 0) {
+        this.$alert("请先绘画围栏");
+        return;
+      }
+      if (this.polyline.editing) {
+        this.$alert("请先结束绘画");
+        return;
+      }
+      if (this.operationType == "add") {
+        this.editorId = "";
+      }
       var str = "";
-      this.polyline.paths[0].forEach((el, i) => {
+      this.polyline.paths.forEach((el, i) => {
         for (let i in el) {
           if (i == "lng" || i == "lat") {
             if (i == "lng") {
@@ -211,16 +292,25 @@ export default {
         venderId: this._venderLoginId,
         //this._globalVenderName
         venderName: "云到收费",
-        mines: this.mine,
-        polygon: str
+        mines: this.mapMine,
+        polygon: str,
+        id: this.editorId
       });
       this.ajax
         .post("/monitorApi/addOrUpdateVenderMinesEnclosure", param)
         .then(res => {
           if (res.data.errorCode == 200) {
-            this.$alert("添加成功").then(res => {
-              this.isShow = false;
-            });
+            if (this.operationType == "add") {
+              this.$alert("添加成功").then(res => {
+                this.getMineList();
+                this.isShow = false;
+              });
+            } else {
+              this.$alert("修改成功").then(res => {
+                this.getMineList();
+                this.isShow = false;
+              });
+            }
           }
         });
     },
@@ -240,79 +330,42 @@ export default {
       });
     },
     cleanMapOverlay() {
+      this.polyline.editing = false;
       this.polyline.paths = [];
       this.markerPointArr = [];
     },
     toggle(name) {
-      if (this.mine == "") {
-        this.$alert("请选择矿点");
-        return;
+      if (this.mapMine == "") {
+        if (this.operationType == "editor") {
+        } else {
+          this.$alert("请选择矿点");
+          return;
+        }
       }
       this[name].editing = !this[name].editing;
       if (!this[name].editing) {
-        this.polyline.paths[0].push(this.polyline.paths[0][0]);
+        this.polyline.paths.push(this.polyline.paths[0]);
         this.markerPointArr = [];
-      }
-    },
-    newPolyline(e) {
-      if (!this.polyline.editing) {
-        return;
-      }
-      const { paths } = this.polyline;
-      if (!paths.length) {
-        paths.push([]);
-      }
-      const path = paths[paths.length - 1];
-      path.pop();
-      if (path.length) {
-        paths.push([]);
       }
     },
     paintPolyline(e) {
       if (!this.polyline.editing) {
         return;
       }
-      const { paths } = this.polyline;
-      !paths.length && paths.push([]);
       this.markerPointArr.push(e.point);
-      paths[paths.length - 1].push(e.point);
+      this.polyline.paths.push(e.point);
     },
     handleSelectionChange() {},
     addMine() {
+      this.operationType = "add";
       this.isShow = true;
-    },
-    getData(a) {
-      this.read = this.read === 2 ? "" : this.read;
-      this.sortDate = this.sortDate === 0 ? "" : this.sortDate;
-      this.warning = this.warning === 0 ? "" : this.warning;
-      let param = this.qs.stringify({
-        venderId: this._venderLoginId,
-        hasRead: this.read,
-        driverNumber: this.driverNumber,
-        startDate: this.startDate,
-        endDate: this.endDate,
-        waringType: this.warning,
-        sortBy: this.sortDate,
-        pagesNo: a ? a - 1 : 0
-      });
-      this.ajax.post("monitorApi/getWaringList", param).then(res => {
-        console.log(res);
-        res.data.body.result.forEach(el => {
-          el.appointmentDate = el.appointmentDate
-            ? this.PF.parseDate(el.appointmentDate)
-            : "-";
-          el.hasread = el.hasread ? "已读" : "未读";
-        });
-        this.dataLength = res.data.body.size;
-        this.tableData = res.data.body.result;
-      });
     },
     mapPosition() {},
     back() {
       if (!this.polyline.editing) {
         return;
       }
-      this.polyline.paths[0].pop();
+      this.polyline.paths.pop();
       this.markerPointArr.pop();
     },
     enlarge() {
@@ -333,13 +386,18 @@ export default {
       let param = this.qs.stringify({
         venderId: this._venderLoginId,
         createDate: this.sDate,
-        pagesNo: a ? a : 0,
+        pagesNo: typeof a == "number" ? a - 1 : 0,
         mines: this.mine
       });
       this.ajax
         .post("/monitorApi/getVenderMinesEnclosureList", param)
         .then(res => {
+          res.data.body.list.forEach((el, i) => {
+            el.status = el.status == 1 ? "开启" : "关闭";
+          });
           this.tableData = res.data.body.list;
+
+          this.total = res.data.body.allcount;
         });
     },
     quickSort(arr) {
@@ -358,6 +416,17 @@ export default {
         }
       }
       return this.quickSort(left).concat([mid], this.quickSort(right));
+    },
+    parsePath(a) {
+      let path = a.split(",");
+      var parseAfterPath = [];
+      path.forEach(el => {
+        var obj = {};
+        obj.lng = el.split("_")[0];
+        obj.lat = el.split("_")[1];
+        parseAfterPath.push(obj);
+      });
+      return parseAfterPath;
     }
   },
   computed: mapState({
@@ -368,6 +437,12 @@ export default {
 </script>
 
 <style lang="less">
+#deviateDialog {
+  .el-table th.is-leaf,
+  .el-table__body td {
+    text-align: center;
+  }
+}
 .deviateDialog {
   .el-dialog {
     border-radius: 6px;
@@ -389,12 +464,14 @@ export default {
   .el-dialog__body {
     padding: 0;
   }
-  .el-select {
-    width: 630px;
+  .el-input__inner{
+    width: 330px;
+  }
+  .el-select,.carNumber {
+    width: 330px;
 
     margin: 0 auto;
-    display: block;
-    float: inherit;
+
     line-height: 60px;
 
     .el-input__inner {
@@ -408,13 +485,14 @@ export default {
 }
 </style>
 <style lang="less">
-.mapAboveSearch {
-  width: 660px;
+.mapAboveSearch{
+background: rgba(0, 0, 0, 0.2);
+    width: 720px;
   height: 60px;
-  background: rgba(0, 0, 0, 0.2);
   top: 0;
-  left: 50%;
-  margin-left: -377px;
+left: 28%;
+    display: flex;
+    
 }
 .selectBox {
   margin-bottom: 14px;
@@ -442,6 +520,7 @@ export default {
   line-height: 72px;
   font-size: 20px;
   color: white;
+  font-weight: bold;
 }
 .backDiv {
   left: 20px;
@@ -461,7 +540,11 @@ export default {
 }
 .done {
   left: 20px;
-  bottom: 80px;
+  bottom: 303px;
+  color: white;
+  background: #0671af !important;
+  border-radius: 6px;
+  font-weight: bold;
   & img {
     &:nth-child(1) {
       display: none;
@@ -497,5 +580,19 @@ export default {
     background: #074a71;
     cursor: pointer;
   }
+  img {
+    margin-top: 18px;
+  }
+}
+
+td span {
+  margin: 0 35px;
+  &:hover {
+    cursor: pointer;
+  }
+}
+.statusBtn {
+  color: cornflowerblue;
+  text-decoration: underline;
 }
 </style>

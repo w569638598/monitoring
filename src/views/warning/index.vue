@@ -39,6 +39,37 @@ export default {
       ]
     };
   },
+  watch: {
+    $route(to, from) {
+      let toPath = to.path;
+      switch (toPath) {
+        case "/warning/warning":
+          this.active = 0;
+          break;
+        case "/warning/statistics":
+          this.active = 1;
+          break;
+        case "/warning/deviate":
+          this.active = 2;
+          break;
+        case "/warning/blackout":
+          this.active = 3;
+          break;
+        case "/warning/timeout":
+          this.active = 4;
+          break;
+        case "/warning/temperatureH":
+          this.active = 5;
+          break;
+        case "/warning/GPSBug":
+          this.active = 6;
+          break;
+        case "/warning/set":
+          this.active = 7;
+          break;
+      }
+    }
+  },
   computed: mapState({
     _venderLoginId: state => state._venderLoginId
   }),
@@ -47,18 +78,21 @@ export default {
       const a = await this.$prompt("请输入6位有效口令", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        callback: async (a,b) => {
-           let param = this.qs.stringify({
-          venderId: this._venderLoginId,
-          command: b.inputValue.toLowerCase()
-        });
-        var res = await axios.post("/monitorApi/checkCommand", param);
-        if(res.data.errorCode == 200){
-          next()
-        }else{
-          this.$alert("口令有误")
-          next(false)
-        }
+        callback: async (a, b) => {
+          if (b.inputValue == null || b.inputValue == "") {
+            return;
+          }
+          let param = this.qs.stringify({
+            venderId: this._venderLoginId,
+            command: b.inputValue.toLowerCase()
+          });
+          var res = await axios.post("/monitorApi/checkCommand", param);
+          if (res.data.errorCode == 200) {
+            next();
+          } else {
+            this.$alert("口令有误");
+            next(false);
+          }
         }
       });
     } else {
@@ -92,7 +126,6 @@ export default {
         case 7:
           this.$router.push("/warning/set");
       }
-      this.active = i;
     }
   }
 };

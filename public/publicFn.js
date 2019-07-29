@@ -91,5 +91,6 @@ export default {
     intercept,
     parseDate,
     loading,
-    getVenderId
+    getVenderId,
+    API_URL: process.env.NODE_ENV === "production" ? "http://39.105.172.118:81/" : "http://192.168.1.149:81/"
 }

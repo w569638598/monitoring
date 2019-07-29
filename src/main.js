@@ -34,7 +34,9 @@ import './assets/public.less'
 // import './assets/coordinate.js'
 // 'http://39.105.172.118:81/';
 //'http://192.168.1.149:81/';
-Axios.defaults.baseURL = "http://39.105.172.118:81/";
+
+
+Axios.defaults.baseURL = publicFn.API_URL;
 Axios.defaults.headers.post['Content-Type'] = 'application/x-www-form-urlencoded';
 Vue.prototype.ajax = Axios;
 

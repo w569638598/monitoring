@@ -194,6 +194,9 @@ export default {
         margin-top: 50px !important;
         letter-spacing: -3px;
       }
+      &:nth-child(3){
+        font-weight: bold;
+      }
       &:nth-child(3),
       &:nth-child(2) {
         // width: 54%;

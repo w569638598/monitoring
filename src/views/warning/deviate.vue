@@ -5,7 +5,7 @@
       <el-date-picker
         v-model="sDate"
         type="date"
-        placeholder="日期"
+        placeholder="创建日期"
         value-format="yyyy-MM-dd"
         class="fl-l"
       ></el-date-picker>
@@ -30,12 +30,18 @@
       <el-table-column prop="mines" label="矿点名称"></el-table-column>
       <el-table-column prop="status" label="状态">
         <template slot-scope="scope">
-          <span
-            class="statusBtn"
-            @click="editorStatus(scope.row)"
+          <el-tooltip
+            class="item"
+            effect="dark"
+            content="点击关闭"
+            placement="right-start"
             v-if="scope.row.status === '开启'"
-          >关闭</span>
-          <span class="statusBtn" @click="editorStatus(scope.row)" v-else>开启</span>
+          >
+            <span class="statusBtn close" @click="editorStatus(scope.row)">已开启</span>
+          </el-tooltip>
+          <el-tooltip class="item" effect="dark" content="点击开启" placement="right-start" v-else>
+            <span class="statusBtn start" @click="editorStatus(scope.row)">已关闭</span>
+          </el-tooltip>
         </template>
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间"></el-table-column>
@@ -69,11 +75,6 @@
           <bm-marker v-for="(item, i) of markerPointArr" :position="item" :key="i"></bm-marker>
           <bm-polyline :path="polyline.paths"></bm-polyline>
         </baidu-map>
-
-        <span class="po-ab positionDiv" @click="mapPosition, toggle('polyline')">
-          <!-- <img src="../../assets/images/mapToolIcon/position.png" alt />
-          <img src="../../assets/images/mapToolIcon/position-c.png" alt />-->
-        </span>
 
         <span
           v-if="polyline.editing"
@@ -120,7 +121,13 @@
               :value="item.value"
             ></el-option>
           </el-select>
-          <el-input class="carNumber" placeholder="输入经纬度，并用','分隔" v-model="addressOrPoint" clearable @change="addrOrPoint"></el-input>
+          <el-input
+            class="carNumber"
+            placeholder="输入所选矿点经纬度，并用','分隔"
+            v-model="addressOrPoint"
+            clearable
+            @change="addrOrPoint"
+          ></el-input>
         </div>
       </div>
       <!-- <div class="btn">
@@ -145,7 +152,7 @@ export default {
       border: true,
       tableData: [],
       zoomState: true,
-      addressOrPoint: '',
+      addressOrPoint: "",
       mineData: [
         {
           label: "请选择报警类型",
@@ -200,23 +207,28 @@ export default {
     // console.log(this.quickSort(arr));
   },
   methods: {
-    addrOrPoint(){
-      if(this.addressOrPoint == ''){
+    addrOrPoint() {
+      if (this.addressOrPoint == "") {
         return;
       }
-      let reg = /^[\u4e00-\u9fa5]+$/
-      if(reg.test(this.addressOrPoint)){
+      let reg = /^[\u4e00-\u9fa5]+$/;
+      if (reg.test(this.addressOrPoint)) {
         this.$alert("请输入经纬度");
-        return
+        return;
       }
-      if(this.addressOrPoint.indexOf(",") < 0){
+      if (this.addressOrPoint.indexOf(",") < 0) {
         this.$alert("经纬度用','号分隔");
-        return
+        return;
       }
-      this.mapPoint.lng = this.addressOrPoint.split(",")[0];
-      this.mapPoint.lat = this.addressOrPoint.split(",")[1];
+      let searchPoint = {
+        lng: this.addressOrPoint.split(",")[0],
+        lat: this.addressOrPoint.split(",")[1]
+      };
+      this.mapPoint = searchPoint;
+      this.markerPointArr.push(searchPoint);
     },
     dialogClose() {
+      this.polyline.editing = false;
       this.polyline.paths = [];
       this.markerPointArr = [];
       this.mapMine = "";
@@ -241,7 +253,6 @@ export default {
       this.isShow = true;
       this.polyline.paths = this.parsePath(a.enclosure);
       this.mapPoint = this.polyline.paths[0];
-      console.log(this.polyline.paths[0]);
       this.mapMine = a.mines;
       this.editorId = a.id;
       // console.log(this.mapPoint)
@@ -291,7 +302,7 @@ export default {
       let param = this.qs.stringify({
         venderId: this._venderLoginId,
         //this._globalVenderName
-        venderName: "云到收费",
+        venderName: this._globalVenderName,
         mines: this.mapMine,
         polygon: str,
         id: this.editorId
@@ -315,8 +326,11 @@ export default {
         });
     },
     getMines() {
+
+      console.log(this._globalVenderName);
+      
       let param = this.qs.stringify({
-        vendername: "云到收费",
+        vendername: this._globalVenderName,
         status: 1
       });
       this.mineData = [];
@@ -339,6 +353,20 @@ export default {
         if (this.operationType == "editor") {
         } else {
           this.$alert("请选择矿点");
+          return;
+        }
+      }
+
+      if (this.operationType == "editor" && this.polyline.paths.length != 0) {
+        if (!this.polyline.editing) {
+          this.$alert("请先删除围栏，再绘制");
+          return;
+        }
+      }
+
+      if (this.operationType == "add" && this.polyline.paths.length != 0) {
+        if (!this.polyline.editing) {
+          this.$alert("请先删除围栏，再绘制");
           return;
         }
       }
@@ -444,6 +472,18 @@ export default {
   }
 }
 .deviateDialog {
+  .el-dialog__headerbtn {
+    &:hover {
+      top: 10px;
+      .el-dialog__close {
+        &:hover {
+          font-size: 22px;
+          color: #dd6f6f;
+        }
+      }
+    }
+    top: 15px;
+  }
   .el-dialog {
     border-radius: 6px;
     overflow: hidden;
@@ -464,10 +504,11 @@ export default {
   .el-dialog__body {
     padding: 0;
   }
-  .el-input__inner{
+  .el-input__inner {
     width: 330px;
   }
-  .el-select,.carNumber {
+  .el-select,
+  .carNumber {
     width: 330px;
 
     margin: 0 auto;
@@ -485,14 +526,13 @@ export default {
 }
 </style>
 <style lang="less">
-.mapAboveSearch{
-background: rgba(0, 0, 0, 0.2);
-    width: 720px;
+.mapAboveSearch {
+  background: rgba(0, 0, 0, 0.2);
+  width: 720px;
   height: 60px;
   top: 0;
-left: 28%;
-    display: flex;
-    
+  left: 28%;
+  display: flex;
 }
 .selectBox {
   margin-bottom: 14px;
@@ -593,6 +633,41 @@ td span {
 }
 .statusBtn {
   color: cornflowerblue;
-  text-decoration: underline;
+  // text-decoration: underline;
+}
+</style>
+
+
+
+<style lang="less" scoped>
+.editorBtn {
+  &:hover {
+    color: #77cc9f;
+  }
+}
+.deleteBtn {
+  &:hover {
+    color: #dd6262;
+  }
+}
+.start {
+  color: #0d0a31;
+  &:hover {
+    color: #61606e;
+  }
+}
+.close {
+  color: #f56c6c;
+  &:hover {
+    color: #d57e7e;
+  }
+}
+.selectBox {
+  .searchBtn,
+  .fl-r {
+    &:hover {
+      color: #5f92b0;
+    }
+  }
 }
 </style>

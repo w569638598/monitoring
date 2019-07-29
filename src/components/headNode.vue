@@ -1,6 +1,6 @@
 <template>
   <div class="top">
-    <span class="companyName fl-l">{{globalVenderName}}燃料物流管理平台</span>
+    <span class="companyName fl-l">{{globalVenderName}}燃料物流调运系统</span>
     <div class="closeBox fl-r">
       <img
         v-if="autoPageState"
@@ -96,7 +96,19 @@ export default {
   color: rgba(255,255,255, 1) !important;
   font-size: 24px;
   vertical-align: text-bottom;
+  position: relative;
   // background: white;
+        &::after{
+content: '';
+    display: block;
+    width: 24%;
+    height: 2px;
+    background: white;
+    bottom: 10px;
+    left: 50%;
+    position: absolute;
+    margin-left: -12%;
+      }
 }
 .top {
   padding: 0 12px;
@@ -118,9 +130,11 @@ export default {
       height: 100%;
       display: block;
       float: left;
+      
       &:hover{
         color: rgba(255,255,255,.6);
       }
+
     }
   }
   .close {

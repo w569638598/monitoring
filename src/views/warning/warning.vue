@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="warning">
     <div class="">
             <div class="selectOption">
         筛选：
@@ -69,7 +69,7 @@
         :border="border"
         @select="selectFn"
       >
-        <el-table-column type="selection" width="80"></el-table-column>
+        <el-table-column type="selection" width="60"></el-table-column>
         <el-table-column label="序号" width="120">
           <template slot-scope="scope">{{ scope.$index+1 }}</template>
         </el-table-column>
@@ -286,7 +286,7 @@ export default {
           ids: a
         });
       }
-      this.ajax.post("monitorApi/updateWaring", param).then(res => {
+      this.ajax.post("positionSystem/waringInfoApi/updateWaring", param).then(res => {
         if (res.data.errorCode == 200) {
           this.getData();
         }
@@ -297,16 +297,16 @@ export default {
       this.sortDate = this.sortDate === 0 ? "" : this.sortDate;
       this.warning = this.warning === 0 ? "" : this.warning;
       let param = this.qs.stringify({
-        venderId: this._venderLoginId,
+        venderId: "888",
         hasRead: this.read,
         driverNumber: this.driverNumber,
         startDate: this.startDate,
         endDate: this.endDate,
         waringType: this.warning,
         sortBy: this.sortDate,
-        pagesNo: a ? a - 1 : 0
+        pagesNo: a ? a : 1
       });
-      this.ajax.post("monitorApi/getWaringList ", param).then(res => {
+      this.ajax.post("positionSystem/waringInfoApi/getWaringList ", param).then(res => {
         res.data.body.result.forEach(el => {
           el.appointmentDate = el.appointmentDate
             ? this.PF.parseDate(el.appointmentDate)
@@ -364,6 +364,11 @@ export default {
 };
 </script>
 <style lang="less">
+.warning{
+  .el-table td, th{
+    text-align: center
+  }
+}
   .el-dialog__body{
     padding-top:20px;
   }

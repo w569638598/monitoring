@@ -470,6 +470,12 @@ export default {
   .el-table__body td {
     text-align: center;
   }
+  td span {
+  margin: 0 35px;
+  &:hover {
+    cursor: pointer;
+  }
+}
 }
 .deviateDialog {
   .el-dialog__headerbtn {
@@ -625,12 +631,7 @@ export default {
   }
 }
 
-td span {
-  margin: 0 35px;
-  &:hover {
-    cursor: pointer;
-  }
-}
+
 .statusBtn {
   color: cornflowerblue;
   // text-decoration: underline;

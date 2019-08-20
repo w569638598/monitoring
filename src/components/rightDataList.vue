@@ -168,7 +168,7 @@ export default {
     position: fixed;
     // word-wrap: ;
     transition: right 0.6s;
-    top: 112px;
+    top: 142px;
     // top: -44px;
     li {
       writing-mode: tb-rl;

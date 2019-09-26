@@ -32,8 +32,6 @@ export default {
         "统计报表",
         "路线偏离",
         "断电报警",
-        "停车超时",
-        "温度过高",
         "GPS故障",
         "设置"
       ]
@@ -55,20 +53,37 @@ export default {
         case "/warning/blackout":
           this.active = 3;
           break;
-        case "/warning/timeout":
+        case "/warning/GPSBug":
           this.active = 4;
           break;
-        case "/warning/temperatureH":
-          this.active = 5;
-          break;
-        case "/warning/GPSBug":
-          this.active = 6;
-          break;
         case "/warning/set":
-          this.active = 7;
+          this.active = 5;
           break;
       }
     }
+  },
+  mounted(){
+    let currentPaht = this.$route.path;
+          switch (currentPaht) {
+        case "/warning/warning":
+          this.active = 0;
+          break;
+        case "/warning/statistics":
+          this.active = 1;
+          break;
+        case "/warning/deviate":
+          this.active = 2;
+          break;
+        case "/warning/blackout":
+          this.active = 3;
+          break;
+        case "/warning/GPSBug":
+          this.active = 4;
+          break;
+        case "/warning/set":
+          this.active = 5;
+          break;
+      }
   },
   computed: mapState({
     _venderLoginId: state => state._venderLoginId
@@ -115,15 +130,9 @@ export default {
           this.$router.push("/warning/blackout");
           break;
         case 4:
-          this.$router.push("/warning/timeout");
-          break;
-        case 5:
-          this.$router.push("/warning/temperatureH");
-          break;
-        case 6:
           this.$router.push("/warning/GPSBug");
           break;
-        case 7:
+        case 5:
           this.$router.push("/warning/set");
       }
     }

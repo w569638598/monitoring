@@ -28,6 +28,10 @@
           <span class="text">{{_this_data.inCircle ? _this_data.inCircle : 0}}</span>辆
         </span>
       </div>
+      <div class="po-ab warningBox" :class="{warningAn: warningTotal > 0}" @click="toWarningPage">
+        <img src="../assets/images/warning-icon.png" alt="">
+        <span>{{warningTotal}}</span>
+      </div>
       <baidu-map
         class="bm-view"
         @ready="handlemapE"
@@ -36,6 +40,10 @@
         :zoom="zoom"
         :scroll-wheel-zoom="true"
       >
+        <bm-marker
+          :position="center"
+        >
+        </bm-marker>
         <bm-circle
           :clicking="false"
           :center="circlePath.center"
@@ -46,10 +54,6 @@
           :stroke-weight="4"
           @lineupdate="updateCirclePath"
         ></bm-circle>
-
-        <!-- <bm-polyline :path="polyline1" stroke-color="blue" :stroke-opacity="0.5" :stroke-weight="8" @lineupdate="updatePolylinePath"></bm-polyline>
-        <bm-polyline :path="polyline2" stroke-color="blue" :stroke-opacity="0.5" :stroke-weight="8" @lineupdate="updatePolylinePath"></bm-polyline>
-        <bm-polyline :path="polyline3" stroke-color="blue" :stroke-opacity="0.5" :stroke-weight="8" @lineupdate="updatePolylinePath"></bm-polyline>-->
         <bm-polygon
           :path="polyline1"
           stroke-color="blue"
@@ -71,6 +75,25 @@
           :stroke-weight="2"
           @lineupdate="updatePolygonPath"
         />
+
+<!-- 矿点 -->
+        <bm-marker
+          v-for="(el, i) of mineList"
+          :key="i"
+          :position="{lng: el.coord.split(',')[0],lat:  el.coord.split(',')[1]}"
+          @click="infoWindowOpen(i)"
+          :icon="flagIcon"
+          :carLabelIndex="carLabelIndex"
+          animation="BMAP_ANIMATION_BOUNCE"
+        >
+          <bm-label
+            :content="el.mines"
+            :labelStyle="{color: 'red', fontSize : '12px', zInde: 99999999}"
+            :offset="{width: 30, height: -35}"
+            :zIndex="labelIndex"
+            animation="BMAP_ANIMATION_BOUNCE"
+          />
+        </bm-marker>
 
         <bm-marker
           v-for="(el, i) of _this_carList"
@@ -134,7 +157,9 @@ import RightDataList from "../components/rightDataList";
 import { mapState, mapMutations } from "vuex";
 import { constants } from "crypto";
 import { truncate } from "fs";
+import { setInterval } from 'timers';
 const carIcon = require("../assets/images/car3.png");
+const flagIcon = require("../assets/images/flagMapIcon.png");
 export default {
   data() {
     return {
@@ -154,6 +179,10 @@ export default {
         url: carIcon,
         size: { width: 47, height: 18 }
       },
+      flagIcon: {
+        url: flagIcon,
+        size: { width: 35, height: 35 }
+      },
       circlePath: {
         center: {
           lng: 0,
@@ -166,7 +195,9 @@ export default {
       carArr: [],
       mapWidth: "80%",
       infoBgSize: "100% 100%",
-      total: ""
+      total: "",
+      mineList: [],
+      warningTotal: 0
     };
   },
   watch: {
@@ -183,6 +214,10 @@ export default {
     _isShowRight(){
       this.mapWidth = this._isShowRight ? "100%" : "80%";
       this.infoBgSize = "100% 100%"
+    },
+        '$route' (to, from) {
+          console.log("to" + to)
+      // 对路由变化作出响应...
     }
   },
   components: {
@@ -197,7 +232,23 @@ export default {
     _venderLoginId: state => state._venderLoginId,
     _isShowRight: state => state._isShowRight
   }),
+  mounted(){
+    var timer;
+    if(this.$route.path == "/monitoring"){
+timer = setInterval(this.getData, 180000)
+    }else{
+      clearInterval(timer)
+    }
+    // if(this.$route.)
+    
+  },
   methods: {
+    toWarningPage(){
+      this.$router.push("/warning/warning")
+    },
+    autoGetData(){
+
+    },
     infoWindowOpen(i) {
       this.carLabelIndex = i;
     },
@@ -236,8 +287,12 @@ export default {
       this.ajax
         .post("monitorApi/monitorInTransitAndLocation", postData)
         .then(res => {
-          
+          console.log(res)
           if(res.data.errorCode == 200){
+            if(res.data.body.mineList.length > 0){
+              this.mineList = res.data.body.mineList
+            }
+            this.warningTotal = res.data.body.warningInfos.length;
             this.total = res.data.body.totalquantity;
           this.center = {
             lng: res.data.body.resultList[0].carList[0].lon,
@@ -245,15 +300,13 @@ export default {
           }
           
           if (res.data.body.coord) {
-            this.center = {
-              lng: res.data.body.coord.location.split("_")[1],
+            let point = {
+lng: res.data.body.coord.location.split("_")[1],
               lat: res.data.body.coord.location.split("_")[0]
-            };
+            }
+            this.center = point;
             this.zoom = 13;
-            this.circlePath.center = {
-              lng: res.data.body.coord.location.split("_")[1],
-              lat: res.data.body.coord.location.split("_")[0]
-            };
+            this.circlePath.center = point;
             this.Radius = Number(res.data.body.coord.radius);
             if (res.data.body.coord.enclosure1) {
               this.polyline1 = this.parseEnclosurePath(
@@ -286,7 +339,8 @@ export default {
           this._changeMon(res.data.body);
           this._changeCarPoint(carList);
           }else{
-            this.total = 0
+            this.total = 0;
+            this.$alert(res.data.msg)
           }
           this.loading().close();
         })
@@ -355,6 +409,35 @@ export default {
     span {
       margin-left: 12px;
     }
+  }
+}
+.warningBox{
+  right: 90px;
+    top: 36px;
+  z-index: 6;
+  span{
+        margin-top: -20px;
+    display: inline-block;
+    padding: 0 6px;
+    background: red;
+    color: white;
+    border-radius: 100px;
+    position: absolute;
+    top: 15px;
+    right: -10px;
+
+  }
+  cursor: pointer;
+}
+.warningAn{
+  animation: warningAnimation .6s infinite;
+}
+@keyframes warningAnimation{
+  0%{
+    opacity: 1;
+  }
+  100%{
+    opacity: 0;
   }
 }
 </style>

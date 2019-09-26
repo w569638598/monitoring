@@ -1,10 +1,9 @@
 <template>
   <div class="warning">
-    <div class="">
-            <div class="selectOption">
-        筛选：
+    <div class>
+      <div class="selectOption">
+        <span style="float: left;line-height: 40px;">筛选：</span>
         <el-date-picker
-          style="margin-top:6px;"
           v-model="startDate"
           type="date"
           placeholder="开始时间"
@@ -13,7 +12,6 @@
         ></el-date-picker>
 
         <el-date-picker
-          style="margin-top:6px;"
           v-model="endDate"
           type="date"
           placeholder="结束时间日期"
@@ -64,21 +62,22 @@
         :data="tableData"
         tooltip-effect="dark"
         style="width: 100%"
-        @selection-change="handleSelectionChange"
+        @selection-change="selectFn"
         :stripe="stripe"
         :border="border"
         @select="selectFn"
+        @select-all="selectFn"
       >
         <el-table-column type="selection" width="60"></el-table-column>
         <el-table-column label="序号" width="120">
           <template slot-scope="scope">{{ scope.$index+1 }}</template>
         </el-table-column>
         <el-table-column prop="platenum" label="车牌号"></el-table-column>
-        <el-table-column prop="appointmentDate" label="预约卸货时间"></el-table-column>
+        <el-table-column prop="appointmentdate" label="预约卸货时间"></el-table-column>
         <el-table-column prop="mines" label="预约矿点"></el-table-column>
         <el-table-column prop="commandmsg" label="报警类型"></el-table-column>
         <el-table-column prop="eventtime" label="报警时间"></el-table-column>
-        <el-table-column prop="hasread" label="状态" width="120"></el-table-column>
+        <el-table-column prop="hasread" label="定位状态" width="120"></el-table-column>
         <el-table-column label="操作" show-overflow-tooltip>
           <template slot-scope="scope">
             <span v-if="scope.row.hasread == '已读'"></span>
@@ -87,7 +86,8 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-pagination style="margin-top: 20px;"
+      <el-pagination
+        style="margin-top: 20px;"
         background
         layout="prev, pager, next"
         :page-size="pageSize"
@@ -103,18 +103,38 @@
             <div>
               <div class="row first">
                 <p>
-                  <span>报警类型：</span>{{infoData.commandmsg}}
+                  <span>报警类型：</span>
+                  {{infoData.commandmsg}}
                 </p>
                 <p>
-                  <span>报警位置：</span><a href="#" @click="openMap(infoData.lng,infoData.lat)">点击查看</a>
+                  <span>报警位置：</span>
+                  <a href="#" @click="openMap(infoData)">点击查看</a>
                 </p>
               </div>
               <div class="row">
                 <p>
-                  <span>报警时间：</span>{{infoData.eventtime}}
+                  <span>报警时间：</span>
+                  {{infoData.eventtime}}
                 </p>
                 <p>
-                  <span>标记状态：</span>{{infoData.hasread}}
+                  <span>标记状态：</span>
+                  {{infoData.hasread}}
+                </p>
+              </div>
+              <div class="row" v-if="infoData.commandmsg == '停车超时'">
+                <p>
+                  <span>开始时间：</span>
+                  {{infoData.bte}}
+                </p>
+                <p>
+                  <span>结束时间：</span>
+                  {{infoData.ete}}
+                </p>
+              </div>
+              <div class="row" v-if="infoData.commandmsg == '停车超时'">
+                <p>
+                  <span>停车时长：</span>
+                  {{infoData.parkMins}}分钟
                 </p>
               </div>
             </div>
@@ -124,55 +144,67 @@
             <div>
               <div class="row first">
                 <p>
-                  <span>车牌号：</span>{{infoData.platenum}}
+                  <span>车牌号：</span>
+                  {{infoData.platenum}}
                 </p>
                 <p>
-                  <span>司机姓名：</span>{{infoData.appname}}
-                </p>
-              </div>
-
-              <div class="row">
-                <p>
-                  <span>手机号：</span>{{infoData.appmobile}}
-                </p>
-                <p>
-                  <span>供应单位：</span>{{infoData.companyName}}
-                </p>
-              </div>
-              <div class="row">
-                <p>
-                  <span>货品名称：</span>{{infoData.appointmentProduct}}
-                </p>
-                <p>
-                  <span>毛重（吨）：</span>{{infoData.rough}}
+                  <span>司机姓名：</span>
+                  {{infoData.appname}}
                 </p>
               </div>
 
               <div class="row">
                 <p>
-                  <span>预约卸货时间：</span>{{infoData.appointmentDate}}
+                  <span>手机号：</span>
+                  {{infoData.appmobile}}
                 </p>
                 <p>
-                  <span>皮重（吨）：</span>{{infoData.tare}}
+                  <span>供应单位：</span>
+                  {{infoData.companyname}}
+                </p>
+              </div>
+              <div class="row">
+                <p>
+                  <span>货品名称：</span>
+                  {{infoData.appointmentproduct}}
+                </p>
+                <p>
+                  <span>毛重（吨）：</span>
+                  {{infoData.rough}}
+                </p>
+              </div>
+
+              <div class="row">
+                <p>
+                  <span>预约卸货时间：</span>
+                  {{infoData.appointmentdate}}
+                </p>
+                <p>
+                  <span>皮重（吨）：</span>
+                  {{infoData.tare}}
                 </p>
               </div>
             </div>
           </div>
         </div>
       </el-dialog>
-      <el-dialog :visible.sync="isShow" title="报警位置" style="text-align: center">
-       <baidu-map
-       :class="{isShow: isShow}"
-        class="map"
-        :center="mapPoint"
-        :zoom="13"
-        :style="{width: width,height: height}"
-        :scroll-wheel-zoom="true"
-      >
-                <bm-marker
-          :position="mapPoint"
-        ></bm-marker>
-      </baidu-map>
+      <el-dialog :visible.sync="isShow" title="报警位置" style="text-align: center" @close="mapClose">
+        <baidu-map
+          :class="{isShow: isShow}"
+          class="map"
+          :center="mapPoint"
+          :zoom="13"
+          :style="{width: width,height: height}"
+          :scroll-wheel-zoom="true"
+        >
+          <bm-geolocation
+            anchor="BMAP_ANCHOR_BOTTOM_RIGHT"
+            :showAddressBar="true"
+            :autoLocation="true"
+          ></bm-geolocation>
+          <bm-marker v-if="markerShow" :position="mapPoint"></bm-marker>
+          <bm-polyline :path="path" stroke-color="blue" :stroke-opacity="0.5" :stroke-weight="8" @click="pathClick"></bm-polyline>
+        </baidu-map>
       </el-dialog>
     </div>
   </div>
@@ -193,8 +225,8 @@ export default {
       driverNumber: "",
       isShow: false,
       mapPoint: {
-        lat: 0,
-        lng: 0
+        lat: 39.913828,
+        lng: 116.403119
       },
       width: "100%",
       height: "500px",
@@ -229,15 +261,11 @@ export default {
         },
         {
           label: "停车超时",
-          value: 10
+          value: 12
         },
         {
           label: "断电报警",
           value: 2
-        },
-        {
-          label: "温度过高",
-          value: 5
         },
         {
           label: "GPS故障",
@@ -260,7 +288,9 @@ export default {
         }
       ],
       sortDate: "",
-      tableData: []
+      tableData: [],
+      path: [],
+      markerShow: true
     };
   },
   computed: mapState({
@@ -271,6 +301,7 @@ export default {
       this.operationread(this.ids.join(","));
     },
     selectFn(selection, row) {
+      this.ids = [];
       selection.forEach(el => {
         this.ids.push(el.id);
       });
@@ -286,18 +317,20 @@ export default {
           ids: a
         });
       }
-      this.ajax.post("positionSystem/waringInfoApi/updateWaring", param).then(res => {
-        if (res.data.errorCode == 200) {
-          this.getData();
-        }
-      });
+      this.ajax
+        .post(this.PF.towAPIUrl + "/waringInfoApi/updateWaring", param)
+        .then(res => {
+          if (res.data.errorCode == 200) {
+            this.getData();
+          }
+        });
     },
     getData(a) {
       this.read = this.read === 2 ? "" : this.read;
       this.sortDate = this.sortDate === 0 ? "" : this.sortDate;
       this.warning = this.warning === 0 ? "" : this.warning;
       let param = this.qs.stringify({
-        venderId: "888",
+        venderId: this._venderLoginId,
         hasRead: this.read,
         driverNumber: this.driverNumber,
         startDate: this.startDate,
@@ -306,36 +339,66 @@ export default {
         sortBy: this.sortDate,
         pagesNo: a ? a : 1
       });
-      this.ajax.post("positionSystem/waringInfoApi/getWaringList ", param).then(res => {
-        res.data.body.result.forEach(el => {
-          el.appointmentDate = el.appointmentDate
-            ? this.PF.parseDate(el.appointmentDate)
-            : "-";
-            console.log(el)
-          el.hasread = el.hasread ? "已读" : "未读";
-          // el.appointmentDate =
+      this.ajax
+        .post(this.PF.towAPIUrl + "/waringInfoApi/getWaringList", param)
+        .then(res => {
+          res.data.body.result.forEach(el => {
+            el.appointmentdate = el.appointmentdate
+              ? this.PF.parseDate(el.appointmentdate)
+              : "-";
+            el.hasread = el.hasread ? "已读" : "未读";
+          });
+          this.dataLength = res.data.body.size;
+          this.tableData = res.data.body.result;
         });
-        this.dataLength = res.data.body.size;
-        this.tableData = res.data.body.result;
-      });
     },
-    handleSelectionChange() {},
     operationInfo(data, i) {
       this.dialogVisible = true;
-      this.infoData = data
-      
+      this.infoData = data;
+
       // this.tableData = data;
     },
-    openMap(a, b){
-      if(a == '0.0'){
-        alert("查询不到位置信息")
-        return
+    openMap(a) {
+      if (a.lat == "" || a.lng == "") {
+        alert("查询不到位置信息");
+        return;
       }
-      this.isShow = true;
-      this.mapPoint = {
-        lng: a,
-        lat: b
+      if (a.commandmsg == "路线偏离") {
+        this.path = [];
+        let param = {
+          venderId: this._venderLoginId,
+          type: a.appointmentdate ? 2 : 1,
+          mine: a.mines
+        };
+        this.ajax
+          .post(this.PF.towAPIUrl + "waringInfoApi/waringRout", param)
+          .then(res => {
+            if(res.data.errorCode == 200){
+              setTimeout(()=>{
+              this.mapPoint = res.data.body.list[0];
+              this.path = res.data.body.list;
+              },20)
+              this.markerShow = false;
+              this.isShow = true;
+            }else{
+              this.$alert(res.data.msg)
+            }
+          });
+      } else {
+        this.markerShow = true;
+        this.isShow = true;
+        this.mapPoint = {
+          lng: a.lng,
+          lat: a.lat
+        };
       }
+    },
+    pathClick(a){
+      console.log(a.point)
+    },
+    mapClose() {
+      this.path = [];
+      this.markerShow = false;
     }
   },
   watch: {
@@ -364,20 +427,21 @@ export default {
 };
 </script>
 <style lang="less">
-.warning{
-  .el-table td, th{
-    text-align: center
+.warning {
+  .el-table td,
+  th {
+    text-align: center;
   }
 }
-  .el-dialog__body{
-    padding-top:20px;
-  }
+.el-dialog__body {
+  padding-top: 20px;
+}
 </style>
 <style lang="less" scoped>
-.first{
+.first {
   margin-top: 20px;
 }
-.type-two{
+.type-two {
   margin-top: 30px;
 }
 .box {
@@ -414,7 +478,7 @@ export default {
         margin-right: 26px;
         width: 120px;
         text-align: right;
-        display: inline-block
+        display: inline-block;
       }
     }
   }

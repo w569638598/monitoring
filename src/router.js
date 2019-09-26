@@ -91,14 +91,14 @@ if (process.env.NODE_ENV === "production") {
     var venderId = getVenderId("venderLoginId");
     if (!venderId) {
       alert("您还没有登陆");
-      window.location.href = configFile.API_URL + "venderBigScreen/systemLogin#"
+      window.location.href = "http://www.yunmei168.com/venderBigScreen/systemLogin#"
       next(false);
       return
     }
     next() // 必须使用 next ,执行效果依赖 next 方法的调用参数
   })
 }
-
-
+//configFile.API_URL + "venderBigScreen/systemLogin#"
+//"http://www.yunmei168.com/venderBigScreen/systemLogin#"
 
 export default router

@@ -506,7 +506,7 @@ export default {
       this.setPie(pieArr);
       this.setEcharts(
         this.PF.intercept(this._this_venderList, 5),
-        this.chartEnteredfactoryArr
+        this.chartAppointmentArr
       );
       this.tabData = obj;
     },
@@ -553,12 +553,12 @@ export default {
       if (type == 0) {
         this.setEcharts(
           this.PF.intercept(this._this_venderList, 5),
-          this.chartEnteredfactoryArr
+          this.chartAppointmentArr
         );
       } else if (type == 1) {
         this.setEcharts(
           this.PF.intercept(this._this_venderList, 5),
-          this.chartAppointmentArr
+          this.chartEnteredfactoryArr
         );
       } else {
         this.setEcharts(

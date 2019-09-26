@@ -60,14 +60,22 @@ export default {
     }
   },
   created() {
-    const routerPath = this.$route.path.slice(1);
+    const routerPath = this.$router.history.current.path;
+    if (routerPath.indexOf("/warning") != -1) {
+      this.navIndex = 3;
+      return;
+    }
     this.router.forEach((el, i) => {
       if (routerPath == el) {
         this.navIndex = i;
       }
     });
+  },
+  mounted() {
     var venD = this.PF.getVenderId("PC_venderName");
-    this.$store.commit("_changeGlobalVenderName", venD);
+    if (venD) {
+      this.$store.commit("_changeGlobalVenderName", venD);
+    }
   },
   methods: {
     navClick(i) {
@@ -76,13 +84,15 @@ export default {
     },
     autopage() {
       var _self = this;
+
       this.autoPageState = !this.autoPageState;
       if (this.autoPageState) {
         this.timer = setInterval(function() {
+          console.log(0);
           _self.navIndex++;
           _self.navIndex = _self.navIndex > 1 ? 0 : _self.navIndex;
           _self.$router.push(_self.router[_self.navIndex]);
-        }, 120000);
+        }, 1200);
       } else {
         clearInterval(this.timer);
       }
@@ -93,13 +103,13 @@ export default {
 
 <style lang='less' scoped>
 .active {
-  color: rgba(255,255,255, 1) !important;
+  color: rgba(255, 255, 255, 1) !important;
   font-size: 24px;
   vertical-align: text-bottom;
   position: relative;
   // background: white;
-        &::after{
-content: '';
+  &::after {
+    content: "";
     display: block;
     width: 24%;
     height: 2px;
@@ -108,7 +118,7 @@ content: '';
     left: 50%;
     position: absolute;
     margin-left: -12%;
-      }
+  }
 }
 .top {
   padding: 0 12px;
@@ -126,15 +136,14 @@ content: '';
       padding: 0 20px;
       margin: 0 20px;
       cursor: pointer;
-      color: rgba(255,255,255,1);
+      color: rgba(255, 255, 255, 1);
       height: 100%;
       display: block;
       float: left;
-      
-      &:hover{
-        color: rgba(255,255,255,.6);
-      }
 
+      &:hover {
+        color: rgba(255, 255, 255, 0.6);
+      }
     }
   }
   .close {

@@ -90,7 +90,8 @@
           </template>
         </el-table-column>
       </el-table>
-      <el-pagination style="margin-top: 20px;"
+      <el-pagination
+        style="margin-top: 20px;"
         background
         layout="prev, pager, next"
         :page-size="pageSize"
@@ -177,8 +178,7 @@ export default {
         this.path = [];
       }
     },
-        _isShowRight(){
-          console.log(this._isShowRight)
+    _isShowRight() {
       this.mapWidth = this._isShowRight ? "100%" : "80%";
     }
   },
@@ -199,13 +199,12 @@ export default {
             this.tableData = res.data.body.resultList;
             this.total = res.data.body.resultList.length;
             this.total = res.data.body.size;
-          }else{
+          } else {
             this.total = 0;
           }
-          console.log(this.total)
         });
 
-        this.loading().close();      
+      this.loading().close();
     },
     lockPath(a, b) {
       this.loading();
@@ -232,7 +231,6 @@ export default {
           this.endPoint = this.path[this.path.length - 1];
           this.dialogVisible = false;
           this.loading().close();
-          // this.$store.commit("_changePath", pathARR);
         });
     },
     more() {
@@ -246,14 +244,12 @@ export default {
       this.ajax
         .post("/monitorApi/orbitOfHistoryInFactoryList", param)
         .then(res => {
-          if(res.data.errorCode == 200){
-            
-          this.tableData = res.data.body.resultList;
-          this.total = res.data.body.size;
+          if (res.data.errorCode == 200) {
+            this.tableData = res.data.body.resultList;
+            this.total = res.data.body.size;
           }
-          
         });
-        this.loading().close();
+      this.loading().close();
     },
     shrinkFn() {
       this.shrink = !this.shrink;
@@ -286,7 +282,7 @@ export default {
   }
   .map {
     width: 80%;
-    transition: width .6s;
+    transition: width 0.6s;
     .info {
       color: white;
       display: flex;

@@ -37,7 +37,7 @@ export default new Vuex.Store({
     MINERAL_ONCLICK: -10,
     _parentEventState: -1,
     _trajectoryState: false,
-    globalVenderName: "",
+    globalVenderName: process.env.NODE_ENV === "production" ? getVenderId("PC_venderName") : "云到收费",
     _venderLoginId: process.env.NODE_ENV === "production" ? getVenderId("venderLoginId") : "999",
     _isShowRight: false
     //a5d77c301d4f44d698257116f6d4a3d4

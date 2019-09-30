@@ -59,8 +59,12 @@ export default {
       });
     }
   },
-  created() {
-    const routerPath = this.$router.history.current.path;
+  mounted() {
+    var venD = this.PF.getVenderId("PC_venderName");
+    if (venD) {
+      this.$store.commit("_changeGlobalVenderName", venD);
+    }
+    const routerPath = this.$route.path;
     if (routerPath.indexOf("/warning") != -1) {
       this.navIndex = 3;
       return;
@@ -70,12 +74,6 @@ export default {
         this.navIndex = i;
       }
     });
-  },
-  mounted() {
-    var venD = this.PF.getVenderId("PC_venderName");
-    if (venD) {
-      this.$store.commit("_changeGlobalVenderName", venD);
-    }
   },
   methods: {
     navClick(i) {
@@ -88,7 +86,6 @@ export default {
       this.autoPageState = !this.autoPageState;
       if (this.autoPageState) {
         this.timer = setInterval(function() {
-          console.log(0);
           _self.navIndex++;
           _self.navIndex = _self.navIndex > 1 ? 0 : _self.navIndex;
           _self.$router.push(_self.router[_self.navIndex]);

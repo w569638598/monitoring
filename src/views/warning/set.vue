@@ -86,6 +86,7 @@
         :zoom="13"
         :style="{width: width,height: height}"
         :scroll-wheel-zoom="true"
+        @ready="handler"
         @click="minersMapEvent"
       >
         <bm-marker :position="minersP"></bm-marker>
@@ -128,8 +129,8 @@ export default {
       navIndex: 0,
       isShow: false,
       mapPoint: {
-        lng: 113,
-        lat: 43
+        lng: 113.666486,
+        lat: 34.752728
       },
       width: "50%",
       height: "500px",
@@ -144,8 +145,8 @@ export default {
         lat: 43
       },
       MPoint: {
-        lng: 113,
-        lat: 36
+        lng: 113.666486,
+        lat: 34.752728
       },
       MP: "",
       MA: "",
@@ -155,21 +156,15 @@ export default {
       mineralname: "",
       minersP: "",
       minersA: "",
-      minersMapPoint: ""
+      minersMapPoint: "",
+      _BMP: "",
+      __BMP: ""
     };
   },
   created() {
     this.getTabList();
 
     this.getList();
-    this.ajax.post(this.PF.towAPIUrl + "/monitorApi/checkVenderPositionHasExists", {
-      venderId: this._venderLoginId
-    }).then(res => {
-      if(res.data.errorCode == 200){
-        this.MP = res.data.body.info.coord;
-        this.MA = res.data.body.info.address;
-      }
-    })
   },
   computed: mapState({
     _venderLoginId: state => state._venderLoginId,
@@ -177,6 +172,7 @@ export default {
   }),
   watch: {
     MP() {
+      console.log(this._BMP, this.__BMP);
       var _self = this;
       var point, pointStr;
       if (typeof this.MP !== "string") {
@@ -184,6 +180,7 @@ export default {
         pointStr = this.MP.lat + "," + this.MP.lng;
         this.MP = pointStr;
       }
+
       var geoc = new BMap.Geocoder();
       var parsePoint = this.MP.split(",");
       point = new BMap.Point(parsePoint[1], parsePoint[0]);
@@ -201,7 +198,21 @@ export default {
       });
     }
   },
+
   methods: {
+    handler({ BMap, map }) {
+      console.log(BMap, map);
+      this._BMP = BMap;
+      this.__BMP = map;
+      this.MPoint = {
+        lng: 113.666486,
+        lat: 34.752728
+      };
+      this.mapPoint = {
+        lng: 113.666486,
+        lat: 34.752728
+      };
+    },
     getTabList() {
       this.ajax
         .post(this.PF.towAPIUrl + "/monitorApi/venderMinePositionList", {
@@ -225,7 +236,6 @@ export default {
           venderId: this._venderLoginId
         })
         .then(res => {
-          console.log(0);
           if (res.data.errorCode == 200) {
             this.minersList = res.data.body.list;
           } else {
@@ -234,9 +244,18 @@ export default {
         });
     },
     closeFn() {
+      this.isShow = false;
       this.mineralname = "";
       this.minersMapPoint = "";
       this.minersA = "";
+      this.MPoint = {
+        lng: 113.666486,
+        lat: 34.752728
+      };
+      this.mapPoint = {
+        lng: 113.666486,
+        lat: 34.752728
+      };
     },
     deleteFn(a) {
       this.$confirm("确定删除此矿点位置信息吗？", "提示", {
@@ -345,26 +364,47 @@ export default {
       this.MP = e.point;
     },
     addMinersAddress(a, b) {
+      // debugger;
+      // console.log(this.isShow)
       this.newAdd = a;
+      if (b) {
+        this.mineralname = b.mines;
+        setTimeout(() => {
+          var point = {
+            lng: b.coord.split(",")[0],
+            lat: b.coord.split(",")[1]
+          };
+          this.MPoint = point;
+          this.minersP = point;
+          this.minersMapPoint = b.coord;
+          this.minersA = b.address;
+        }, 80);
+      }
       if (a) {
         this.mapPoint = {
-          lng: 113,
-          lat: 43
+          lng: 113.666486,
+          lat: 34.752728
         };
-      } else {
-        this.mineralname = b.mines;
-        var point = {
-          lng: b.coord.split(",")[0],
-          lat: b.coord.split(",")[1]
-        };
-        this.MPoint = point;
-        this.minersP = point;
-        this.minersMapPoint = b.coord;
       }
       this.isShow = true;
     },
     tabFn(e, i) {
       this.navIndex = i;
+      if (i === 1) {
+        this.ajax
+          .post(
+            this.PF.towAPIUrl + "/monitorApi/checkVenderPositionHasExists",
+            {
+              venderId: this._venderLoginId
+            }
+          )
+          .then(res => {
+            if (res.data.errorCode == 200) {
+              this.MP = res.data.body.info.coord;
+              this.MA = res.data.body.info.address;
+            }
+          });
+      }
     }
   }
 };

@@ -105,10 +105,20 @@ export default {
           if (res.data.errorCode == 200) {
             next();
           } else {
+            debugger
+            if(a == "cancel"){
+              return;
+            }else{
             this.$alert("口令有误");
             next(false);
+            }
           }
+          if(a === 'confirm'){
+
+          }
+          
         }
+        
       });
     } else {
       next();

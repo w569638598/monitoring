@@ -10,6 +10,7 @@
         class="fl-l"
       ></el-date-picker>
       <el-select v-model="mine" placeholder="选择矿点" style="width: 180px" class="fl-l">
+        <el-option value>查询矿点</el-option>
         <el-option v-for="(item, i) in mineData" :key="i" :label="item.label" :value="item.value"></el-option>
       </el-select>
       <span class="fl-l searchBtn" @click="getMineList">查找</span>
@@ -78,14 +79,22 @@
             :position="venderAddress.coord"
             :icon="endicon"
           >
-            <bm-label :content="venderAddress.address" :offset="{width: -35, height: 30}" />
+            <bm-label
+              v-if="venderAddress.address != ''"
+              :content="venderAddress.address"
+              :offset="{width: -35, height: 30}"
+            />
           </bm-marker>
           <bm-marker
             @click=" toggle('polyline', true)"
             :position="mineAddress.coord"
             :icon="satrticon"
           >
-            <bm-label :content="mineAddress.address" :offset="{width: -35, height: 30}" />
+            <bm-label
+              v-if="mineAddress.address != ''"
+              :content="mineAddress.address"
+              :offset="{width: -35, height: 30}"
+            />
           </bm-marker>
           <bm-polyline :path="polyline.paths"></bm-polyline>
         </baidu-map>
@@ -237,13 +246,10 @@ export default {
     TCSelectMine() {
       this.mineAddress.address = "";
       this.ajax
-        .post(
-          this.PF.towAPIUrl + "/monitorApi/checkMinePositionHasExists",
-          {
-            venderId: this._venderLoginId,
-            mine: this.TCSelectMine.value
-          }
-        )
+        .post(this.PF.towAPIUrl + "/monitorApi/checkMinePositionHasExists", {
+          venderId: this._venderLoginId,
+          mine: this.TCSelectMine.value
+        })
         .then(res => {
           if (res.data.errorCode != 200) {
             const t = confirm("矿点位置不存在，是否跳转设置页面？");
@@ -274,13 +280,13 @@ export default {
         this.$alert("请选择矿点");
         return;
       }
-      if(this.mineAddress.address == ''){
+      if (this.mineAddress.address == "") {
         this.$alert("请确认填写地址");
         return;
       }
-      if(this.TCSelectMine.hasRoute == 1){
+      if (this.TCSelectMine.hasRoute == 1) {
         this.$alert("已有路线，请勿重复添加");
-        return
+        return;
       }
       this.mapPoint = this.mineAddress.coord;
       this.addmineTC = false;
@@ -310,7 +316,7 @@ export default {
       this.polyline.editing = false;
       this.polyline.paths = [];
       this.markerPointArr = [];
-      this.mineAddress.address = ""
+      this.mineAddress.address = "";
     },
     editorStatus(a) {
       let param = {
@@ -336,11 +342,14 @@ export default {
           id: a.id
         })
         .then(res => {
-          this.polyline.paths = res.data.body.list;
-          this.mineAddress.coord = this.polyline.paths[0];
-          this.venderAddress.coord = this.polyline.paths[
-            this.polyline.paths.length - 1
-          ];
+          setTimeout(() => {
+            this.polyline.paths = res.data.body.list;
+            this.mineAddress.coord = this.polyline.paths[0];
+            this.venderAddress.coord = this.polyline.paths[
+              this.polyline.paths.length - 1
+            ];
+            this.mapPoint = this.polyline.paths[this.polyline.paths.length - 1];
+          }, 50);
           this.venderAddress.address = "";
           this.mineAddress.address = "";
         });
@@ -383,7 +392,7 @@ export default {
       }
       let param = {
         venderId: this._venderLoginId,
-        mine: this.TCSelectMine,
+        mine: this.TCSelectMine.value,
         routeInfo: this.polyline.paths
       };
       this.ajax
@@ -412,10 +421,7 @@ export default {
       };
       this.mineData = [];
       this.ajax
-        .post(
-          this.PF.towAPIUrl + "/monitorApi/getMinesListByVenderId",
-          param
-        )
+        .post(this.PF.towAPIUrl + "/monitorApi/getMinesListByVenderId", param)
         .then(res => {
           res.data.body.list.forEach((el, i) => {
             var obj = {};
@@ -463,20 +469,20 @@ export default {
     },
     handleSelectionChange() {},
     addMine() {
+      this.getMines();
+      this.TCSelectMine = "";
       this.ajax
-        .post(
-          this.PF.towAPIUrl + "/monitorApi/checkVenderPositionHasExists",
-          {
-            venderId: this._venderLoginId
-          }
-        )
+        .post(this.PF.towAPIUrl + "/monitorApi/checkVenderPositionHasExists", {
+          venderId: this._venderLoginId
+        })
         .then(res => {
           if (res.data.errorCode == 200) {
             this.venderAddress = res.data.body.info;
-            this.venderAddress.coord = {
-              lng: res.data.body.info.coord.split(",")[0],
-              lat: res.data.body.info.coord.split(",")[1]
+            var point = {
+              lng: res.data.body.info.coord.split(",")[1],
+              lat: res.data.body.info.coord.split(",")[0]
             };
+            this.venderAddress.coord = point;
           } else {
             const conf = confirm("当前厂商位置不存在，是否跳转设置厂商位置？");
             if (conf) {
@@ -564,16 +570,16 @@ export default {
 </script>
 
 <style lang="less">
-  .addressinof {
-    & > div {
-      overflow: hidden;
-      line-height: 36px;
-      & > * {
-        display: block;
-        float: left;
-      }
+.addressinof {
+  & > div {
+    overflow: hidden;
+    line-height: 36px;
+    & > * {
+      display: block;
+      float: left;
     }
   }
+}
 .addmineTC {
   .el-dialog__title {
     line-height: 24px;
@@ -606,7 +612,7 @@ export default {
   }
 }
 .deviateDialog {
-  .el-dialog__title{
+  .el-dialog__title {
     padding-left: 20px;
   }
   .el-dialog__body {

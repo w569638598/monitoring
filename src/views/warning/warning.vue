@@ -69,15 +69,16 @@
         @select-all="selectFn"
       >
         <el-table-column type="selection" width="60"></el-table-column>
-        <el-table-column label="序号" width="120">
-          <template slot-scope="scope">{{ scope.$index+1 }}</template>
-        </el-table-column>
+        <!-- <el-table-column label="序号" width="120">
+          <template slot-scope="scope">{{scope.$index+1 }}</template>
+        </el-table-column>-->
+        <el-table-column type="index" :index="indexMethod"></el-table-column>
         <el-table-column prop="platenum" label="车牌号"></el-table-column>
         <el-table-column prop="appointmentdate" label="预约卸货时间"></el-table-column>
         <el-table-column prop="mines" label="预约矿点"></el-table-column>
         <el-table-column prop="commandmsg" label="报警类型"></el-table-column>
         <el-table-column prop="eventtime" label="报警时间"></el-table-column>
-        <el-table-column prop="hasread" label="定位状态" width="120"></el-table-column>
+        <el-table-column prop="hasread" label="已读状态" width="120"></el-table-column>
         <el-table-column label="操作" show-overflow-tooltip>
           <template slot-scope="scope">
             <span v-if="scope.row.hasread == '已读'"></span>
@@ -117,7 +118,7 @@
                   {{infoData.eventtime}}
                 </p>
                 <p>
-                  <span>标记状态：</span>
+                  <span>已读状态：</span>
                   {{infoData.hasread}}
                 </p>
               </div>
@@ -169,8 +170,8 @@
                   {{infoData.appointmentproduct}}
                 </p>
                 <p>
-                  <span>毛重（吨）：</span>
-                  {{infoData.rough}}
+                  <span>预约矿点：</span>
+                  {{infoData.mines}}
                 </p>
               </div>
 
@@ -182,6 +183,12 @@
                 <p>
                   <span>皮重（吨）：</span>
                   {{infoData.tare}}
+                </p>
+              </div>
+              <div class="row">
+                <p>
+                  <span>毛重（吨）：</span>
+                  {{infoData.rough}}
                 </p>
               </div>
             </div>
@@ -202,8 +209,32 @@
             :showAddressBar="true"
             :autoLocation="true"
           ></bm-geolocation>
-          <bm-marker v-if="markerShow" :position="mapPoint"></bm-marker>
-          <bm-polyline :path="path" stroke-color="blue" :stroke-opacity="0.5" :stroke-weight="8" @click="pathClick"></bm-polyline>
+          <bm-marker :position="mapPoint" @click="infoWindowOpen">
+            <bm-info-window
+              :show="infoWindowState"
+              :title="infoWindowDetails.divernumber"
+              @clickclose="infoWindowClose"
+              :offset="{width: 0, height: -25}"
+            >
+              <ul class="merkerInfo">
+                <li>
+                  车牌号：
+                  <span>{{infoWindowDetails.platenum}}</span>
+                </li>
+                <li>
+                  报警时间：
+                  <span>{{infoWindowDetails.eventtime}}</span>
+                </li>
+                <li>
+                  报警地址：
+                  <span>{{infoWindowDetails.address}}</span>
+                </li>
+              </ul>
+            </bm-info-window>
+          </bm-marker>
+          <bm-marker v-if="startPoint.lng" :icon="satrticon" :position="startPoint"></bm-marker>
+          <bm-marker v-if="endPoint.lng" :icon="endicon" :position="endPoint"></bm-marker>
+          <bm-polyline :path="path" stroke-color="blue" :stroke-opacity="0.5" :stroke-weight="8"></bm-polyline>
         </baidu-map>
       </el-dialog>
     </div>
@@ -212,7 +243,8 @@
 
 <script>
 import { mapState } from "vuex";
-
+const iconStart = require("../../assets/images/icon-start.png");
+const iconEnd = require("../../assets/images/icon-end.png");
 export default {
   data() {
     return {
@@ -224,9 +256,20 @@ export default {
       dataLength: null,
       driverNumber: "",
       isShow: false,
+      startPoint: "",
+      endPoint: "",
+      carLabelIndex: -1,
       mapPoint: {
         lat: 39.913828,
         lng: 116.403119
+      },
+      satrticon: {
+        url: iconStart,
+        size: { width: 32, height: 32 }
+      },
+      endicon: {
+        url: iconEnd,
+        size: { width: 32, height: 32 }
       },
       width: "100%",
       height: "500px",
@@ -290,14 +333,30 @@ export default {
       sortDate: "",
       tableData: [],
       path: [],
-      markerShow: true
+      infoWindowState: false,
+      infoWindowDetails: ""
     };
   },
   computed: mapState({
     _venderLoginId: state => state._venderLoginId
   }),
   methods: {
+    indexMethod(index) {
+      // console.log(index)
+      return index + 1;
+      // return index * 2;
+    },
+    infoWindowClose() {
+      this.infoWindowState = false;
+    },
+    infoWindowOpen() {
+      this.infoWindowState = true;
+    },
     operationSome() {
+      if (this.ids.length == 0) {
+        this.$alert("请选择需要操作的数据");
+        return;
+      }
       this.operationread(this.ids.join(","));
     },
     selectFn(selection, row) {
@@ -321,6 +380,7 @@ export default {
         .post(this.PF.towAPIUrl + "/waringInfoApi/updateWaring", param)
         .then(res => {
           if (res.data.errorCode == 200) {
+            this.$alert(res.data.msg);
             this.getData();
           }
         });
@@ -359,10 +419,14 @@ export default {
       // this.tableData = data;
     },
     openMap(a) {
+      this.startPoint = "";
+      this.endPoint = "";
+      var _self = this;
       if (a.lat == "" || a.lng == "") {
         alert("查询不到位置信息");
         return;
       }
+      this.infoWindowDetails = a;
       if (a.commandmsg == "路线偏离") {
         this.path = [];
         let param = {
@@ -373,35 +437,38 @@ export default {
         this.ajax
           .post(this.PF.towAPIUrl + "waringInfoApi/waringRout", param)
           .then(res => {
-            if(res.data.errorCode == 200){
-              setTimeout(()=>{
-              this.mapPoint = res.data.body.list[0];
-              this.path = res.data.body.list;
-              },20)
-              this.markerShow = false;
-              this.isShow = true;
-            }else{
-              this.$alert(res.data.msg)
+            if (res.data.errorCode == 200) {
+              setTimeout(() => {
+                _self.path = res.data.body.list;
+                _self.startPoint = res.data.body.list[0];
+                _self.endPoint =
+                  res.data.body.list[res.data.body.list.length - 1];
+                console.log(_self.startPoint);
+              }, 100);
+            } else {
+              this.$alert(res.data.msg);
             }
           });
-      } else {
-        this.markerShow = true;
-        this.isShow = true;
-        this.mapPoint = {
+      }
+      setTimeout(() => {
+        _self.mapPoint = {
           lng: a.lng,
           lat: a.lat
         };
-      }
-    },
-    pathClick(a){
-      console.log(a.point)
+      }, 100);
+      this.isShow = true;
     },
     mapClose() {
+      this.infoWindowState = false;
       this.path = [];
-      this.markerShow = false;
     }
   },
   watch: {
+    currentPage() {
+      debugger
+      console.log(this.pageSize * this.currentPage)
+      this.indexMethod(this.pageSize * this.currentPage);
+    },
     startDate() {
       this.getData();
     },

@@ -427,7 +427,8 @@ export default {
         return;
       }
       this.infoWindowDetails = a;
-      if (a.commandmsg == "路线偏离") {
+      if (a.commandmsg == "路线偏离" || a.commandmsg == "停车超时") {
+        console.log(a)
         this.path = [];
         let param = {
           venderId: this._venderLoginId,
@@ -438,6 +439,7 @@ export default {
           .post(this.PF.towAPIUrl + "waringInfoApi/waringRout", param)
           .then(res => {
             if (res.data.errorCode == 200) {
+              console.log(res)
               setTimeout(() => {
                 _self.path = res.data.body.list;
                 _self.startPoint = res.data.body.list[0];

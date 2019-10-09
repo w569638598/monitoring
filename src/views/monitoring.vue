@@ -88,7 +88,7 @@
           :key="index"
           :position="{lng: el.coord.split(',')[0],lat:  el.coord.split(',')[1]}"
           :icon="flagIcon"
-          animation="BMAP_ANIMATION_BOUNCE"
+          
         >
           <bm-label
             :content="el.mines"

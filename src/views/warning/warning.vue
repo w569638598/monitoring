@@ -500,6 +500,8 @@ export default {
   .el-table td,
   th {
     text-align: center;
+    font-size: 17px;
+    color: #000
   }
 }
 .el-dialog__body {

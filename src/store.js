@@ -7,15 +7,15 @@ const getVenderId = function (cname) {
   var name = cname + "=";
   var decodedCookie = decodeURIComponent(document.cookie);
   var ca = decodedCookie.split(';');
-  for(var i = 0; i <ca.length; i++) {
-      var c = ca[i];
-      while (c.charAt(0) == ' ') {
-          c = c.substring(1);
-       }
-       if (c.indexOf(name) == 0) {
-          return c.substring(name.length, c.length);
-       }
-   }
+  for (var i = 0; i < ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
   return "";
 }
 
@@ -44,49 +44,49 @@ export default new Vuex.Store({
     // getVenderId("venderLoginId")
   },
   mutations: {
-    _changeMon(a, b){
-        a._mon = b;
+    _changeMon(a, b) {
+      a._mon = b;
     },
-    _changeCarPoint(a, b){
-        a._carList = b;
+    _changeCarPoint(a, b) {
+      a._carList = b;
     },
-    _changeCarLabelState(a, b){
-        a._carLabelState = b
+    _changeCarLabelState(a, b) {
+      a._carLabelState = b
     },
-    _changeVender(a, b){      
+    _changeVender(a, b) {
       a._venderList = b;
     },
-    _warchType(a, b){
+    _warchType(a, b) {
       a._tabType = b;
     },
-    _selectVender(a, b){
+    _selectVender(a, b) {
       a._venderName = b;
     },
-    _changeDiverInfo(a, b){
+    _changeDiverInfo(a, b) {
       a._saveDiverInfo = b
     },
-    _changePath(a, b){
+    _changePath(a, b) {
       a._lushuPath = b
     },
-    _changeCarLabelIndex(a, b){
+    _changeCarLabelIndex(a, b) {
       a._carLabelIndex = b
     },
-    CLICK_MINERAL(a, b){
+    CLICK_MINERAL(a, b) {
       a.MINERAL_ONCLICK = b
     },
-    _parentEvent(a, b){
+    _parentEvent(a, b) {
       a._parentEventState++;
     },
-    _trajectoryInit(a, b){
+    _trajectoryInit(a, b) {
       a._trajectoryState = b;
     },
-    _changeGlobalVenderName(a, b){
+    _changeGlobalVenderName(a, b) {
       a.globalVenderName = b;
     },
-    _changeDiverNumber(a, b){
+    _changeDiverNumber(a, b) {
       a._saveDiverInfo = b
     },
-    _changeRightState(a, b){
+    _changeRightState(a, b) {
       a._isShowRight = b
     }
   },

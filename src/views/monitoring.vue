@@ -158,7 +158,7 @@ import { log } from "util";
 import RightDataList from "../components/rightDataList";
 import { mapState, mapMutations } from "vuex";
 import { constants } from "crypto";
-import { truncate } from "fs";
+import { truncate, stat } from "fs";
 import { setInterval } from "timers";
 const carIcon = require("../assets/images/car3.png");
 const flagIcon = require("../assets/images/flagMapIcon.png");
@@ -219,14 +219,16 @@ export default {
     _isShowRight() {
       this.mapWidth = this._isShowRight ? "100%" : "80%";
       this.infoBgSize = "100% 100%";
-    },
-    $route(to, from) {
-      console.log("to" + to);
-      // 对路由变化作出响应...
     }
   },
   components: {
     RightDataList
+  },
+    beforeRouteLeave (to, from, next) {
+      monitoringAudio = document.getElementById("audio");
+      monitoringAudio.setAttribute("loop","loop")
+                monitoringAudio.pause();
+                next()
   },
   computed: mapState({
     _this_data: state => state._mon,
@@ -307,7 +309,7 @@ export default {
                 timerAudio = setTimeout(() => {
                     monitoringAudio.pause();
                monitoringAudio.removeAttribute("loop")
-                }, 1000*60*60);
+                }, 60000);
            }
           }else{
              if(res.data.body.waringSize > 0   ){
@@ -321,7 +323,7 @@ export default {
                   timerAudio = setTimeout(() => {
 monitoringAudio.pause();
                monitoringAudio.removeAttribute("loop")       
-                  }, 1000*60*60);
+                  }, 60000);
                  
                }
                

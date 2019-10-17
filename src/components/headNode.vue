@@ -48,9 +48,9 @@ export default {
       timer: null
     };
   },
-  computed: mapState(["globalVenderName"]),
+  computed: mapState(["globalVenderName", "route"]),
   watch: {
-    $route() {
+    $route(to) {
       const routerPath = this.$route.path;
       this.router.forEach((el, i) => {
         if (routerPath == el) {
@@ -89,7 +89,7 @@ export default {
           _self.navIndex++;
           _self.navIndex = _self.navIndex > 1 ? 0 : _self.navIndex;
           _self.$router.push(_self.router[_self.navIndex]);
-        }, 1200);
+        }, 30000);
       } else {
         clearInterval(this.timer);
       }

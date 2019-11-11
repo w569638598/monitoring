@@ -135,7 +135,6 @@ export default {
       }
       this.carListActive = i;
       if (this.pageType == "trajectory") {
-        this.loading();
         let param = this.qs.stringify({
           venderId: this._venderLoginId,
           diverNumber: data.divernumber,
@@ -150,7 +149,6 @@ export default {
             this._changeDiverInfo(res.data.body);
             let pathARR = this.PF.parsePath(res.data.body.content);
             this.$store.commit("_changePath", pathARR);
-            this.loading().close();
           });
         return;
       }
@@ -174,7 +172,6 @@ export default {
       this.$store.commit("_selectVender", name);
     },
     getTrajectoryData() {
-      this.loading();
       let param = this.qs.stringify({
         venderId: this._venderLoginId,
         searchdate: this.date,
@@ -184,7 +181,6 @@ export default {
         this.$emit("sendTotal", res.data.body.totalquantity ? res.data.body.totalquantity : 0);
         this._trajectoryInit(false);
         this._changeMon(res.data.body);
-        this.loading().close();
       });
     }
   },

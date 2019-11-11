@@ -39,7 +39,8 @@ export default new Vuex.Store({
     _trajectoryState: false,
     globalVenderName: process.env.NODE_ENV === "production" ? getVenderId("PC_venderName") : "云到收费",
     _venderLoginId: process.env.NODE_ENV === "production" ? getVenderId("venderLoginId") : "999",
-    _isShowRight: false
+    _isShowRight: false,
+    _currentPage: ""
     //a5d77c301d4f44d698257116f6d4a3d4
     // getVenderId("venderLoginId")
   },
@@ -88,6 +89,9 @@ export default new Vuex.Store({
     },
     _changeRightState(a, b) {
       a._isShowRight = b
+    },
+    _changeCurrentPage(a, b){
+      a._currentPage = b;
     }
   },
   actions: {

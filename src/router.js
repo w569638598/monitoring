@@ -60,6 +60,10 @@ const router = new Router({
           component: () => import('./views/warning/warning.vue')
         }
       ]
+    },
+    {
+      path: "/vendermapinfo",
+      component: () => import('./views/venderMapInfo.vue')
     }
   ]
 })

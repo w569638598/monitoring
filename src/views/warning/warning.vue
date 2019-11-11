@@ -214,19 +214,20 @@
               :show="infoWindowState"
               :title="infoWindowDetails.divernumber"
               @clickclose="infoWindowClose"
-              :offset="{width: 0, height: -25}"
+              :offset="{width: 0, height: -15}"
             >
+            <p v-if="rowDataType == '路线偏离'" style="color: red;"><img style="margin-left: 10px;" width="26px;" src="../../assets/images/warningIcon.png" alt="">&nbsp;&nbsp;&nbsp;偏离距离：<span style="font-size: 26px;">{{infoWindowDetails.version}}</span>米</p>
               <ul class="merkerInfo">
                 <li>
-                  车牌号：
+                  <span style="display: inline-block;width: 80px;text-align: right; color: #666">车牌号：</span>
                   <span>{{infoWindowDetails.platenum}}</span>
                 </li>
                 <li>
-                  报警时间：
+                  <span style="display: inline-block;width: 80px;text-align: right; color: #666">报警时间：</span>
                   <span>{{infoWindowDetails.eventtime}}</span>
                 </li>
                 <li>
-                  报警地址：
+                  <span style="display: inline-block;width: 80px;text-align: right; color: #666">报警地址：</span>
                   <span>{{infoWindowDetails.address}}</span>
                 </li>
               </ul>
@@ -334,7 +335,8 @@ export default {
       tableData: [],
       path: [],
       infoWindowState: false,
-      infoWindowDetails: ""
+      infoWindowDetails: "",
+      rowDataType: ""
     };
   },
   computed: mapState({
@@ -419,6 +421,7 @@ export default {
       // this.tableData = data;
     },
     openMap(a) {
+      this.rowDataType = a.commandmsg;
       this.startPoint = "";
       this.endPoint = "";
       var _self = this;
@@ -427,6 +430,9 @@ export default {
         return;
       }
       this.infoWindowDetails = a;
+      if(a.commandmsg == "路线偏离"){
+        this.infoWindowState = true;
+      }
       if (a.commandmsg == "路线偏离" || a.commandmsg == "停车超时") {
         console.log(a)
         this.path = [];
@@ -441,6 +447,9 @@ export default {
             if (res.data.errorCode == 200) {
               console.log(res)
               setTimeout(() => {
+                if(res.data.body.list.length <= 0){
+                  return
+                }
                 _self.path = res.data.body.list;
                 _self.startPoint = res.data.body.list[0];
                 _self.endPoint =

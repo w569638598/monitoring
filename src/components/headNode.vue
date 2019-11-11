@@ -52,6 +52,7 @@ export default {
   watch: {
     $route(to) {
       const routerPath = this.$route.path;
+      this.$store.commit("_changeCurrentPage", routerPath)
       this.router.forEach((el, i) => {
         if (routerPath == el) {
           this.navIndex = i;

@@ -511,7 +511,6 @@ export default {
       this.tabData = obj;
     },
     getData() {
-      this.loading();
       var vl = [];
       let param = this.qs.stringify({
         venderId: this._venderLoginId,
@@ -542,7 +541,6 @@ export default {
           });
           this.copyData = res.data.body.result;
           this.parseData(res.data.body.result);
-          this.loading().close();
         })
         .catch(err => {
           console.log(err);

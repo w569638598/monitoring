@@ -85,7 +85,6 @@ export default {
       this.$store.commit("_warchType", type);
     },
     getAllData(type) {
-      this.loading();
       this.$store.commit("_parentEvent", "allData");
       if (this.pageType == "monitoring") {
         let postData = this.qs.stringify({
@@ -107,7 +106,6 @@ export default {
               }
             });
             this._changeCarPoint(carList);
-            this.loading().close();
           })
           .catch(function(error) {
             console.log(error);

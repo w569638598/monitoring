@@ -29,10 +29,7 @@ export default {
       active: 0,
       leftNav: [
         "报警信息",
-        "统计报表",
         "路线偏离",
-        "断电报警",
-        "GPS故障",
         "设置"
       ]
     };
@@ -44,20 +41,11 @@ export default {
         case "/warning/warning":
           this.active = 0;
           break;
-        case "/warning/statistics":
+        case "/warning/deviate":
           this.active = 1;
           break;
-        case "/warning/deviate":
-          this.active = 2;
-          break;
-        case "/warning/blackout":
-          this.active = 3;
-          break;
-        case "/warning/GPSBug":
-          this.active = 4;
-          break;
         case "/warning/set":
-          this.active = 5;
+          this.active = 2;
           break;
       }
     }
@@ -68,20 +56,11 @@ export default {
         case "/warning/warning":
           this.active = 0;
           break;
-        case "/warning/statistics":
+        case "/warning/deviate":
           this.active = 1;
           break;
-        case "/warning/deviate":
-          this.active = 2;
-          break;
-        case "/warning/blackout":
-          this.active = 3;
-          break;
-        case "/warning/GPSBug":
-          this.active = 4;
-          break;
         case "/warning/set":
-          this.active = 5;
+          this.active = 2;
           break;
       }
   },
@@ -131,18 +110,9 @@ export default {
           this.$router.push("/warning/warning");
           break;
         case 1:
-          this.$router.push("/warning/statistics");
-          break;
-        case 2:
           this.$router.push("/warning/deviate");
           break;
-        case 3:
-          this.$router.push("/warning/blackout");
-          break;
-        case 4:
-          this.$router.push("/warning/GPSBug");
-          break;
-        case 5:
+        case 2:
           this.$router.push("/warning/set");
       }
     }

@@ -184,7 +184,6 @@ export default {
   },
   methods: {
     tabmore(a) {
-      this.loading();
       this.dialogVisible = true;
       let param = this.qs.stringify({
         venderId: this._venderLoginId,
@@ -204,10 +203,8 @@ export default {
           }
         });
 
-      this.loading().close();
     },
     lockPath(a, b) {
-      this.loading();
       let param = this.qs.stringify({
         venderId: this._venderLoginId,
         diverNumber: this._saveDiverInfo.diverNumber,
@@ -230,11 +227,9 @@ export default {
           this.startPoint = this.path[0];
           this.endPoint = this.path[this.path.length - 1];
           this.dialogVisible = false;
-          this.loading().close();
         });
     },
     more() {
-      this.loading();
       this.dialogVisible = true;
       let param = this.qs.stringify({
         venderId: this._venderLoginId,
@@ -249,7 +244,6 @@ export default {
             this.total = res.data.body.size;
           }
         });
-      this.loading().close();
     },
     shrinkFn() {
       this.shrink = !this.shrink;

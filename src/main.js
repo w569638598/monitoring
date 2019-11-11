@@ -23,6 +23,7 @@ const loading = function(){
   background: 'rgba(0, 0, 0, 0.7)'
 });
 }
+
 document.title = "云到厂端管理系统"
 Vue.prototype.loading = loading;
 

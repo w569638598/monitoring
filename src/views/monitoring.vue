@@ -88,7 +88,6 @@
           :key="index"
           :position="{lng: el.coord.split(',')[0],lat:  el.coord.split(',')[1]}"
           :icon="flagIcon"
-          
         >
           <bm-label
             :content="el.mines"
@@ -202,10 +201,22 @@ export default {
       total: "",
       mineList: [],
       warningTotal: 0,
-      venderCenter: ""
+      venderCenter: "",
+      timer: ""
     };
   },
   watch: {
+    // _currentPage(){
+    //   var timer;
+    //   if(this._currentPage == '/monitoring'){
+    //           timer = setInterval(() => {
+    //     this.getData();
+    //   }, 18000);
+    //   }else{
+    //     clearInterval(timer)
+    //   }
+    // },
+
     _MINERAL_ONCLICK() {
       this.carLabelIndex = -1;
     },
@@ -224,11 +235,11 @@ export default {
   components: {
     RightDataList
   },
-    beforeRouteLeave (to, from, next) {
-      monitoringAudio = document.getElementById("audio");
-      monitoringAudio.setAttribute("loop","loop")
-                monitoringAudio.pause();
-                next()
+  beforeRouteLeave(to, from, next) {
+    monitoringAudio = document.getElementById("audio");
+    monitoringAudio.setAttribute("loop", "loop");
+    monitoringAudio.pause();
+    next();
   },
   computed: mapState({
     _this_data: state => state._mon,
@@ -238,18 +249,19 @@ export default {
     _MINERAL_ONCLICK: state => state.MINERAL_ONCLICK,
     _venderLoginId: state => state._venderLoginId,
     _venderName: state => state.globalVenderName,
-    _isShowRight: state => state._isShowRight
+    _isShowRight: state => state._isShowRight,
+    _currentPage: state => state._currentPage
   }),
+
+  beforeDestroy() {
+    clearInterval(this.timer._id);
+  },
   mounted() {
-    var timer;
-    var _self = this;
-    if (this.$route.path == "/monitoring" || this.$route.path == "/") {
-      timer = setInterval(() => {
-        _self.getData();
-      }, 180000);
-    } else {
-      clearInterval(timer);
-    }
+    
+      this.timer = setInterval(() => {
+        this.getData();
+      }, 18000);
+    
   },
   methods: {
     toWarningPage() {
@@ -285,12 +297,10 @@ export default {
       this.$store.commit("_changeCarLabelState", this.markerState);
     },
     getData() {
-      this.loading();
       let postData = this.qs.stringify({
         venderId: this._venderLoginId,
         type: "1"
       });
-      
 
       this.ajax
         .post("monitorApi/monitorInTransitAndLocation", postData)
@@ -301,42 +311,38 @@ export default {
             if (res.data.body.mineList.length > 0) {
               this.mineList = res.data.body.mineList;
             }
-          if(!oldwaringSize){ //第一次
-           if(res.data.body.waringSize > 0 ){
-             monitoringAudio.setAttribute("loop","loop")
+            if (!oldwaringSize) {
+              //第一次
+              if (res.data.body.waringSize > 0) {
+                monitoringAudio.setAttribute("loop", "loop");
                 monitoringAudio.play();
                 oldwaringSize = res.data.body.waringSize;
                 timerAudio = setTimeout(() => {
-                    monitoringAudio.pause();
-               monitoringAudio.removeAttribute("loop")
+                  monitoringAudio.pause();
+                  monitoringAudio.removeAttribute("loop");
                 }, 60000);
-           }
-          }else{
-             if(res.data.body.waringSize > 0   ){
-               //非第一次  并且告警次数不一致
-               if(oldwaringSize < res.data.body.waringSize){
-                 monitoringAudio.setAttribute("loop","loop");
-                 monitoringAudio.play();
-                  clearInterval(timerAudio)
-                    monitoringAudio.play();
-                    oldwaringSize = res.data.body.waringSize;
+              }
+            } else {
+              if (res.data.body.waringSize > 0) {
+                //非第一次  并且告警次数不一致
+                if (oldwaringSize < res.data.body.waringSize) {
+                  monitoringAudio.setAttribute("loop", "loop");
+                  monitoringAudio.play();
+                  clearInterval(timerAudio);
+                  monitoringAudio.play();
+                  oldwaringSize = res.data.body.waringSize;
                   timerAudio = setTimeout(() => {
-monitoringAudio.pause();
-               monitoringAudio.removeAttribute("loop")       
+                    monitoringAudio.pause();
+                    monitoringAudio.removeAttribute("loop");
                   }, 60000);
-                 
-               }
-               
-             }else{
-               oldwaringSize = 0;
-               monitoringAudio.removeAttribute("loop")
-                clearInterval(timerAudio)
+                }
+              } else {
+                oldwaringSize = 0;
+                monitoringAudio.removeAttribute("loop");
+                clearInterval(timerAudio);
                 monitoringAudio.pause();
-             }
-
-          }
-
-           
+              }
+            }
 
             oldwaringSize = res.data.body.waringSize;
             this.warningTotal = res.data.body.waringSize;
@@ -386,7 +392,6 @@ monitoringAudio.pause();
             this.total = 0;
             this.$alert(res.data.msg);
           }
-          this.loading().close();
         })
         .catch(function(error) {
           console.log(error);

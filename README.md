@@ -28,3 +28,8 @@ npm run lint
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
 >
+
+|a|b|
+
+```javascript
+document.getElementById("myH1").innerHTML="Welcome to my Homepage"; //javascipt

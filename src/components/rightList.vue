@@ -126,7 +126,6 @@ export default {
     },
     _changeCarLabelState(data, i) {
       //车是个列表，点击单个车的时候，xuyy
-      
       let o = [];
       if (data.lat == "") {
         // return;
@@ -152,6 +151,8 @@ export default {
           });
         return;
       }
+
+
       this._changeCarLabelIndex(i);
       this.$store.commit("_changeCarPoint", o);
     },

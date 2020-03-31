@@ -95,7 +95,8 @@ if (process.env.NODE_ENV === "production") {
     var venderId = getVenderId("venderLoginId");
     if (!venderId) {
       alert("您还没有登陆");
-      window.location.href = "http://www.yunmei168.com/venderBigScreen/systemLogin#"
+      // window.location.href = "http://39.105.172.118:81/venderBigScreen/systemLogin#"
+      window.location.href = "http://192.168.1.16:81/venderBigScreen/systemLogin#"
       next(false);
       return
     }

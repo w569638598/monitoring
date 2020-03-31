@@ -92,8 +92,9 @@ export default {
     parseDate,
     loading,
     getVenderId,
-    API_URL: process.env.NODE_ENV === "production" ? "http://39.105.172.118:81/" : "http://192.168.1.149:81/",
-    towAPIUrl: process.env.NODE_ENV === "production" ? "http://39.105.172.118:85/" : "http://192.168.1.149:8088/"
+    // API_URL: process.env.NODE_ENV === "production" ? "http://39.105.172.118:81/" : "http://192.168.1.149:81/",
+    API_URL: "http://192.168.1.16:81/",
+    towAPIUrl: "http://192.168.1.16:8080/"
 }
 
 //http://39.105.172.118:81/

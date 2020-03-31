@@ -43,7 +43,7 @@
         :zoom="zoom"
         :scroll-wheel-zoom="true"
       >
-        <bm-marker v-if="venderCenter.lng" :position="venderCenter">
+        <bm-marker v-if="venderCenter.lng" :position="venderCenter" @click="alertPosition()">
           <bm-label
             v-if="center.lng != 116.4039325102"
             :content="_venderName"
@@ -206,25 +206,15 @@ export default {
     };
   },
   watch: {
-    // _currentPage(){
-    //   var timer;
-    //   if(this._currentPage == '/monitoring'){
-    //           timer = setInterval(() => {
-    //     this.getData();
-    //   }, 18000);
-    //   }else{
-    //     clearInterval(timer)
-    //   }
-    // },
-
     _MINERAL_ONCLICK() {
       this.carLabelIndex = -1;
     },
     _this_carList() {
       if (this._this_carList.length == 1) {
-        this.zoom = 13;
-        this.center.lat = this._this_carList[0].lat;
-        this.center.lng = this._this_carList[0].lon;
+        this.center = {
+          lat: this._this_carList[0].lat,
+          lng: this._this_carList[0].lon
+        }
       }
     },
     _isShowRight() {
@@ -257,13 +247,15 @@ export default {
     clearInterval(this.timer._id);
   },
   mounted() {
-    
       this.timer = setInterval(() => {
         this.getData();
-      }, 18000);
+      }, 1800000);
     
   },
   methods: {
+    alertPosition(event){
+      console.log(event);
+    },
     toWarningPage() {
       this.$router.push("/warning/warning");
     },
@@ -311,52 +303,53 @@ export default {
             if (res.data.body.mineList.length > 0) {
               this.mineList = res.data.body.mineList;
             }
-            if (!oldwaringSize) {
-              //第一次
-              if (res.data.body.waringSize > 0) {
-                monitoringAudio.setAttribute("loop", "loop");
-                monitoringAudio.play();
-                oldwaringSize = res.data.body.waringSize;
-                timerAudio = setTimeout(() => {
-                  monitoringAudio.pause();
-                  monitoringAudio.removeAttribute("loop");
-                }, 60000);
-              }
-            } else {
-              if (res.data.body.waringSize > 0) {
-                //非第一次  并且告警次数不一致
-                if (oldwaringSize < res.data.body.waringSize) {
-                  monitoringAudio.setAttribute("loop", "loop");
-                  monitoringAudio.play();
-                  clearInterval(timerAudio);
-                  monitoringAudio.play();
-                  oldwaringSize = res.data.body.waringSize;
-                  timerAudio = setTimeout(() => {
-                    monitoringAudio.pause();
-                    monitoringAudio.removeAttribute("loop");
-                  }, 60000);
-                }
-              } else {
-                oldwaringSize = 0;
-                monitoringAudio.removeAttribute("loop");
-                clearInterval(timerAudio);
-                monitoringAudio.pause();
-              }
-            }
+
+            // if (!oldwaringSize) {
+            //   //第一次
+            //   if (res.data.body.waringSize > 0) {
+            //     monitoringAudio.setAttribute("loop", "loop");
+            //     monitoringAudio.play();
+            //     oldwaringSize = res.data.body.waringSize;
+            //     timerAudio = setTimeout(() => {
+            //       monitoringAudio.pause();
+            //       monitoringAudio.removeAttribute("loop");
+            //     }, 60000);
+            //   }
+            // } else {
+            //   if (res.data.body.waringSize > 0) {
+            //     //非第一次  并且告警次数不一致
+            //     if (oldwaringSize < res.data.body.waringSize) {
+            //       monitoringAudio.setAttribute("loop", "loop");
+            //       monitoringAudio.play();
+            //       clearInterval(timerAudio);
+            //       monitoringAudio.play();
+            //       oldwaringSize = res.data.body.waringSize;
+            //       timerAudio = setTimeout(() => {
+            //         monitoringAudio.pause();
+            //         monitoringAudio.removeAttribute("loop");
+            //       }, 60000);
+            //     }
+            //   } else {
+            //     oldwaringSize = 0;
+            //     monitoringAudio.removeAttribute("loop");
+            //     clearInterval(timerAudio);
+            //     monitoringAudio.pause();
+            //   }
+            // }
 
             oldwaringSize = res.data.body.waringSize;
             this.warningTotal = res.data.body.waringSize;
             this.total = res.data.body.totalquantity;
 
             if (res.data.body.coord) {
-              let point = {
+              let __pointaaa = {
                 lng: res.data.body.coord.location.split("_")[1],
                 lat: res.data.body.coord.location.split("_")[0]
               };
-              this.center = point;
-              this.venderCenter = point;
+              this.center = __pointaaa;
+              this.venderCenter = __pointaaa;
               this.zoom = 13;
-              this.circlePath.center = point;
+              this.circlePath.center = __pointaaa;
               this.Radius = Number(res.data.body.coord.radius);
               if (res.data.body.coord.enclosure1) {
                 this.polyline1 = this.parseEnclosurePath(

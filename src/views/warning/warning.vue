@@ -505,6 +505,10 @@ export default {
 };
 </script>
 <style lang="less">
+
+@media(max-width: 1660px){
+
+}
 .warning {
   .el-table td,
   th {

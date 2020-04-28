@@ -1,5 +1,5 @@
 <template>
-  <div class="montioring">
+  <div class="montioring trajectory">
     <div class="map po-re" :style="{width: mapWidth}">
       <div v-if="_trajectoryState" class="info po-ab" :class="{closeState: closeState}">
         <div class="carN">{{_saveDiverInfo.diverNumber}}</div>
@@ -27,8 +27,9 @@
             alt
           />
         </div>
-
+        <el-button class="moregj" type="text" @click="addpl">添加路线偏离</el-button>
         <el-button class="moregj" type="text" @click="more">更多轨迹</el-button>
+
         <div class="shrink">
           <div v-if="shrink" class="open shrink_btn" @click="shrinkFn">
             <img src="../assets/images/open-active.png" alt />
@@ -100,6 +101,33 @@
         @current-change="tabmore"
       ></el-pagination>
     </el-dialog>
+
+    <el-dialog title=" 添加路线偏离" :visible.sync="pathdialog" width="30%" @close="addPathDialogClose">
+      <div class="plBox">
+        <div class="selectMine">
+          <span>选择矿点：</span>
+          <el-select v-model="SelectMine" placeholder="选择矿点" class="fl-l">
+            <el-option
+              v-for="(item, i) in mineData"
+              :key="i"
+              :label="item.label"
+              :value="item"
+              :disabled="item.hasRoute == 1"
+            ></el-option>
+          </el-select>
+        </div>
+        <div class="mineAddress">
+          <span>矿点地址：</span>
+          {{mineAddress.address}}
+        </div>
+      </div>
+      <el-button
+        type="primary"
+        @click.native.prevent="addPlSubmit"
+        style="display: block;
+    margin: 0 auto;"
+      >确认添加</el-button>
+    </el-dialog>
   </div>
 </template>
 
@@ -127,6 +155,13 @@ export default {
       pageSize: 10,
       currentPage: 0,
       page: 0,
+      pathdialog: false,
+      SelectMine: "",
+      mineData: [],
+      mineAddress: {
+        coord: "",
+        address: ""
+      },
       startPoint: { lng: 116.4039539679, lat: 39.9150666134 },
       satrticon: {
         url: iconStart,
@@ -161,7 +196,8 @@ export default {
     _lushuPath: state => state._lushuPath,
     _trajectoryState: state => state._trajectoryState,
     _venderLoginId: state => state._venderLoginId,
-    _isShowRight: state => state._isShowRight
+    _isShowRight: state => state._isShowRight,
+    _globalVenderName: state => state.globalVenderName
   }),
   watch: {
     _lushuPath() {
@@ -180,9 +216,85 @@ export default {
     },
     _isShowRight() {
       this.mapWidth = this._isShowRight ? "100%" : "80%";
+    },
+    SelectMine() {
+      this.mineAddress.address = "";
+      this.ajax
+        .post(this.PF.towAPIUrl + "monitorApi/checkMinePositionHasExists", {
+          venderId: this._venderLoginId,
+          mine: this.SelectMine.value
+        })
+        .then(res => {
+          if (res.data.errorCode != 200) {
+            const t = confirm("矿点位置不存在，是否跳转设置页面？");
+            if (t) {
+              this.$router.push("/warning/set");
+              return;
+            }
+          } else {
+            this.mineAddress = res.data.body.info;
+            this.mineAddress.coord = {
+              lng: res.data.body.info.coord.split(",")[0],
+              lat: res.data.body.info.coord.split(",")[1]
+            };
+          }
+        });
     }
   },
+  created() {
+    this.getMines();
+  },
   methods: {
+    addPlSubmit() {
+      if (this.SelectMine == "" || this.mineAddress.address == "") {
+        this.$alert("请选择矿点");
+        return;
+      }
+
+
+      
+          let param = {
+            venderId: this._venderLoginId,
+            mine: this.SelectMine.value,
+            routeInfo: this.path
+          };
+          this.ajax
+            .post(this.PF.towAPIUrl + "monitorApi/inserRoute", param)
+            .then(res => {
+              if (res.data.errorCode == 200) {
+                this.$alert("添加成功");
+              } else {
+                this.$alert(res.data.msg);
+              }
+              this.addPathDialogClose();
+              this.pathdialog = false;
+            });
+        
+      // if()
+    },
+    addPathDialogClose() {
+      (this.SelectMine = ""), (this.mineAddress.address = "");
+      this.token = "";
+    },
+    getMines() {
+      let param = {
+        vendername: this._globalVenderName,
+        status: 1,
+        venderId: this._venderLoginId
+      };
+      this.mineData = [];
+      this.ajax
+        .post(this.PF.towAPIUrl + "/monitorApi/getMinesListByVenderId", param)
+        .then(res => {
+          res.data.body.list.forEach((el, i) => {
+            var obj = {};
+            obj.label = el.mineralname;
+            obj.value = el.mineralname;
+            obj.hasRoute = el.hasRoute;
+            this.mineData.push(obj);
+          });
+        });
+    },
     tabmore(a) {
       this.dialogVisible = true;
       let param = this.qs.stringify({
@@ -202,7 +314,6 @@ export default {
             this.total = 0;
           }
         });
-
     },
     lockPath(a, b) {
       let param = this.qs.stringify({
@@ -228,6 +339,35 @@ export default {
           this.endPoint = this.path[this.path.length - 1];
           this.dialogVisible = false;
         });
+    },
+    addpl() {
+      const self = this;
+      const a = this.$prompt("请输入6位有效口令", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        callback: async (a, b) => {
+          if (b.inputValue == null || b.inputValue == "") {
+            return;
+          }
+          let param = this.qs.stringify({
+            venderId: this._venderLoginId,
+            command: b.inputValue.toLowerCase()
+          });
+          var res = await self.ajax.post("/monitorApi/checkCommand", param);
+          //123456
+          if (res.data.errorCode == 200) {
+            self.pathdialog = true;
+          } else {
+            if (a == "cancel") {
+              return;
+            } else {
+              this.$alert("口令有误");
+            }
+          }
+          if (a === "confirm") {
+          }
+        }
+      });
     },
     more() {
       this.dialogVisible = true;
@@ -263,7 +403,48 @@ export default {
   }
 };
 </script>
+<style lang="less">
+.trajectory {
+  .el-dialog{
+    margin-top: 28vh !important;
+  }
+  .el-dialog__body{
+    min-height: 300px;
+    .el-button{
+      margin-top: 30px !important;
+    }
+  }
+  .tokenBox {
+    overflow: hidden;
+    clear: both;
+    margin: 20px 0;
+  }
+}
+</style>
 <style lang="less" scoped>
+.plBox {
+  overflow: hidden;
+  & > div {
+    span {
+      width: 100px;
+      text-align: right;
+    }
+  }
+}
+.selectMine,
+.tokenBox,
+.mineAddress {
+  padding-left: 30px;
+  overflow: hidden;
+  margin: 30px 0;
+  line-height: 50px;
+  & > * {
+    float: left;
+  }
+  span {
+    margin-right: 12px;
+  }
+}
 .operation {
   color: #1296db;
 }

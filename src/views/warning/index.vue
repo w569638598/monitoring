@@ -38,13 +38,13 @@ export default {
     $route(to, from) {
       let toPath = to.path;
       switch (toPath) {
-        case "/warning/warning":
+        case "warning":
           this.active = 0;
           break;
-        case "/warning/deviate":
+        case "deviate":
           this.active = 1;
           break;
-        case "/warning/set":
+        case "set":
           this.active = 2;
           break;
       }
@@ -81,10 +81,10 @@ export default {
             command: b.inputValue.toLowerCase()
           });
           var res = await axios.post("/monitorApi/checkCommand", param);
+          //123456
           if (res.data.errorCode == 200) {
             next();
           } else {
-            debugger
             if(a == "cancel"){
               return;
             }else{
@@ -107,13 +107,16 @@ export default {
     navClick(i) {
       switch (i) {
         case 0:
-          this.$router.push("/warning/warning");
+          this.$router.push("warning");
+          this.active = 0;
           break;
         case 1:
-          this.$router.push("/warning/deviate");
+          this.$router.push("deviate");
+          this.active = 1;
           break;
         case 2:
-          this.$router.push("/warning/set");
+          this.active = 2;
+          this.$router.push("set");
       }
     }
   }

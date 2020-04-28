@@ -20,12 +20,7 @@
       />
     </div>
     <nav class="fl-r">
-      <span
-        v-for="(nav, i) in nav"
-        :key="i"
-        @click="navClick(i)"
-        :class="{active: navIndex == i}"
-      >{{nav}}</span>
+      <router-link tag="span" v-for="(item, i) of router" :key="i" :to="item.path" exact-active-class="active">{{item.name}}</router-link>
     </nav>
   </div>
 </template>
@@ -38,11 +33,22 @@ export default {
     return {
       nav: ["在途监控", "数据统计", "行驶轨迹", "报警管理"],
       navIndex: 0,
-      router: [
-        "/monitoring",
-        "/datastatistics",
-        "/trajectory",
-        "/warning/warning"
+      router: [{
+        name: '在途监控',
+        path: "/monitoring"
+      },
+      {
+        name: '数据统计',
+        path: "/datastatistics"
+      },
+      {
+        name: '行驶轨迹',
+        path: "/trajectory"
+      },
+      {
+        name: '报警管理',
+        path: "/warning"
+      }
       ],
       autoPageState: false,
       timer: null
@@ -77,10 +83,6 @@ export default {
     });
   },
   methods: {
-    navClick(i) {
-      this.navIndex = i;
-      this.$router.push(this.router[i]);
-    },
     autopage() {
       var _self = this;
 
@@ -100,7 +102,7 @@ export default {
 </script>
 
 <style lang='less' scoped>
-.active {
+.router-link-active {
   color: rgba(255, 255, 255, 1) !important;
   font-size: 24px;
   vertical-align: text-bottom;

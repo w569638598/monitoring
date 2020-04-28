@@ -249,7 +249,7 @@ export default {
   mounted() {
       this.timer = setInterval(() => {
         this.getData();
-      }, 1800000);
+      }, 180000);
     
   },
   methods: {
@@ -304,40 +304,48 @@ export default {
               this.mineList = res.data.body.mineList;
             }
 
-            // if (!oldwaringSize) {
-            //   //第一次
-            //   if (res.data.body.waringSize > 0) {
-            //     monitoringAudio.setAttribute("loop", "loop");
-            //     monitoringAudio.play();
-            //     oldwaringSize = res.data.body.waringSize;
-            //     timerAudio = setTimeout(() => {
-            //       monitoringAudio.pause();
-            //       monitoringAudio.removeAttribute("loop");
-            //     }, 60000);
-            //   }
-            // } else {
-            //   if (res.data.body.waringSize > 0) {
-            //     //非第一次  并且告警次数不一致
-            //     if (oldwaringSize < res.data.body.waringSize) {
-            //       monitoringAudio.setAttribute("loop", "loop");
-            //       monitoringAudio.play();
-            //       clearInterval(timerAudio);
-            //       monitoringAudio.play();
-            //       oldwaringSize = res.data.body.waringSize;
-            //       timerAudio = setTimeout(() => {
-            //         monitoringAudio.pause();
-            //         monitoringAudio.removeAttribute("loop");
-            //       }, 60000);
-            //     }
-            //   } else {
-            //     oldwaringSize = 0;
-            //     monitoringAudio.removeAttribute("loop");
-            //     clearInterval(timerAudio);
-            //     monitoringAudio.pause();
-            //   }
-            // }
-
+            if (typeof(oldwaringSize) == "undefined") {
+              //第一次
+              console.log("第一次")
+              if (res.data.body.waringSize > 0) {
+                console.log("第一次有报警")
+                monitoringAudio.setAttribute("loop", "loop");
+                monitoringAudio.play();
+                oldwaringSize = res.data.body.waringSize;
+                timerAudio = setTimeout(() => {
+                  console.log("报警暂停")
+                  monitoringAudio.pause();
+                  monitoringAudio.removeAttribute("loop");
+                }, 60000);
+              }
+            } else {
+              console.log("非第一次")
+              if (res.data.body.waringSize > 0) {
+                console.log("非第一次有报警")
+                //非第一次  并且告警次数不一致
+                // if (oldwaringSize < res.data.body.waringSize) {
+                  monitoringAudio.setAttribute("loop", "loop");
+                  monitoringAudio.play();
+                  clearInterval(timerAudio);
+                  monitoringAudio.play();
+                  oldwaringSize = res.data.body.waringSize;
+                  timerAudio = setTimeout(() => {
+                    monitoringAudio.pause();
+                    console.log("报警暂停")
+                    monitoringAudio.removeAttribute("loop");
+                  }, 60000);
+                // }
+              } else {
+                console.log("非第一次无报警,报警删除")
+                oldwaringSize = 0;
+                monitoringAudio.removeAttribute("loop");
+                clearInterval(timerAudio);
+                monitoringAudio.pause();
+              }
+            }
+console.log(oldwaringSize)
             oldwaringSize = res.data.body.waringSize;
+            console.log("oldwaringSize赋值" + oldwaringSize)
             this.warningTotal = res.data.body.waringSize;
             this.total = res.data.body.totalquantity;
 

@@ -48,7 +48,8 @@
       <el-table-column prop="createDate" label="创建时间"></el-table-column>
       <el-table-column label="操作" show-overflow-tooltip>
         <template slot-scope="scope">
-          <span class="editorBtn fc-g" @click="editor(scope.row, scope.$index)">查看</span>
+          <span class="lookBtn fc-g" @click="look(scope.row, scope.$index)">查看</span>
+          <span class="editorBtn fc-g" @click="editor(scope.row, scope.$index)">编辑</span>
           <span class="deleteBtn fc-r" @click="deleteFn(scope.row)">删除</span>
         </template>
       </el-table-column>
@@ -63,7 +64,12 @@
       @current-change="getMineList"
     ></el-pagination>
 
-    <el-dialog :visible.sync="isShow" title="新增路线" class="deviateDialog" @close="dialogClose">
+    <el-dialog
+      :visible.sync="isShow"
+      :title="dialogTitle"
+      class="deviateDialog"
+      @close="dialogClose"
+    >
       <div class="po-re">
         <baidu-map
           class="map"
@@ -96,10 +102,14 @@
               :offset="{width: -35, height: 30}"
             />
           </bm-marker>
-          <bm-polyline :path="polyline.paths"></bm-polyline>
+          <bm-polyline
+            :path="polyline.paths"
+            :editing="lineEditorStatus"
+            @lineupdate="updatePolylinePath"
+          ></bm-polyline>
         </baidu-map>
 
-        <span v-if="operationType != 'editor'" class="po-ab backDiv" @click="back" title="撤销">
+        <span v-if="operationType == 'add'" class="po-ab backDiv" @click="back" title="撤销">
           <!-- <img src="../../assets/images/mapToolIcon/back.png" alt /> -->
           <img src="../../assets/images/mapToolIcon/back-c.png" alt />
         </span>
@@ -112,10 +122,14 @@
           <img src="../../assets/images/mapToolIcon/enlarge-c.png" title="缩放地图" alt />
         </span>
 
-        <span v-if="operationType != 'editor'" class="po-ab reset" @click="cleanMapOverlay">
+        <span v-if="operationType == 'add'" class="po-ab reset" @click="cleanMapOverlay">
           <img src="../../assets/images/mapToolIcon/reset.png" title="删除围栏" alt width="30px;" />
         </span>
-        <span v-if="operationType != 'editor'" class="po-ab done" @click="commit">提交</span>
+        <span
+          v-if="(operationType == 'add' || operationType == 'neweditor')"
+          class="po-ab done"
+          @click="commit"
+        >提交</span>
       </div>
       <!-- <div class="btn">
         <input type="buttom" value="确定" class @click="endPainting" />
@@ -171,14 +185,16 @@ const iconEnd = require("../../assets/images/icon-end.png");
 export default {
   data() {
     return {
+      lineEditorStatus: false,
       pageSize: 10,
       currentPage: 0,
       total: null,
       stripe: true,
       border: true,
-      tableData: [],
+      tableData: [{}],
       zoomState: true,
       addressOrPoint: "",
+      dialogTitle: "",
       mineData: [
         {
           label: "请选择报警类型",
@@ -239,7 +255,8 @@ export default {
         coord: "",
         address: ""
       },
-      TCSelectMine: ""
+      TCSelectMine: "",
+      dataDetails: {}
     };
   },
   watch: {
@@ -275,6 +292,10 @@ export default {
     // console.log(this.quickSort(arr));
   },
   methods: {
+    updatePolylinePath(e) {
+      this.polyline.paths = e.target.getPath();
+      // console.log(e.target.getPath(), this.polyline.paths);
+    },
     newAddFn() {
       if (this.TCSelectMine == "") {
         this.$alert("请选择矿点");
@@ -317,6 +338,7 @@ export default {
       this.polyline.paths = [];
       this.markerPointArr = [];
       this.mineAddress.address = "";
+      this.lineEditorStatus = false;
     },
     editorStatus(a) {
       let param = {
@@ -334,9 +356,15 @@ export default {
         });
     },
     editor(a) {
-      this.operationType = "editor";
+      this.dialogTitle = "编辑路线";
       this.isShow = true;
-
+      // this.deleteLine(a)
+      this.dataDetails = a;
+      this.lookLine(a);
+      this.lineEditorStatus = true;
+      this.operationType = "neweditor";
+    },
+    lookLine(a) {
       this.ajax
         .post(this.PF.towAPIUrl + "/monitorApi/getRouteDetail", {
           id: a.id
@@ -354,6 +382,30 @@ export default {
           this.mineAddress.address = "";
         });
     },
+    look(a) {
+      this.operationType = "editor";
+      this.isShow = true;
+      this.dialogTitle = "查看路线";
+      this.lookLine(a);
+    },
+    deleteLine(a, b) {
+      let param = {
+        id: a.id
+      };
+      this.ajax
+        .post(this.PF.towAPIUrl + "/monitorApi/deleteRoute", param)
+        .then(res => {
+          if (res.data.errorCode == 200) {
+            if (!b) {
+              this.$alert("删除成功").then(res => {
+                this.getMineList();
+              });
+            }else{
+              this.submitPath(this.dataDetails.mine, this.polyline.paths)
+            }
+          }
+        });
+    },
     deleteFn(a) {
       this.$confirm("确定删除此条数据？", "提示", {
         confirmButtonText: "确定",
@@ -361,24 +413,42 @@ export default {
         type: "warning"
       })
         .then(() => {
-          let param = {
-            id: a.id
-          };
-          this.ajax
-            .post(this.PF.towAPIUrl + "/monitorApi/deleteRoute", param)
-            .then(res => {
-              if (res.data.errorCode == 200) {
-                this.$alert("删除成功").then(res => {
-                  this.getMineList();
-                });
-              }
-            });
+          this.deleteLine(a);
         })
         .catch(() => {
           return;
         });
     },
+    submitPath(mine, path) {
+      let param = {
+        venderId: this._venderLoginId,
+        mine: mine,
+        routeInfo: path
+      };
+      this.ajax
+        .post(this.PF.towAPIUrl + "monitorApi/inserRoute", param)
+        .then(res => {
+          if (res.data.errorCode == 200) {
+            if (this.operationType == "add") {
+              this.$alert("添加成功").then(res => {
+                this.getMineList();
+                this.isShow = false;
+              });
+            } else {
+              this.$alert("修改成功").then(res => {
+                this.getMineList();
+                this.dataDetails = {};
+                this.isShow = false;
+              });
+            }
+          }
+        });
+    },
     commit() {
+      if (this.operationType == "neweditor") {
+        this.deleteLine(this.dataDetails, "a");
+        return;
+      }
       if (this.polyline.paths.length == 0) {
         this.$alert("请先绘画路径");
         return;
@@ -390,28 +460,7 @@ export default {
       if (this.operationType == "add") {
         this.editorId = "";
       }
-      let param = {
-        venderId: this._venderLoginId,
-        mine: this.TCSelectMine.value,
-        routeInfo: this.polyline.paths
-      };
-      this.ajax
-        .post(this.PF.towAPIUrl + "/monitorApi/inserRoute", param)
-        .then(res => {
-          if (res.data.errorCode == 200) {
-            if (this.operationType == "add") {
-              this.$alert("添加成功").then(res => {
-                this.getMineList();
-                this.isShow = false;
-              });
-            } else {
-              this.$alert("修改成功").then(res => {
-                this.getMineList();
-                this.isShow = false;
-              });
-            }
-          }
-        });
+      this.submitPath(this.TCSelectMine.value, this.polyline.paths);
     },
     getMines() {
       let param = {
@@ -471,6 +520,7 @@ export default {
     addMine() {
       this.getMines();
       this.TCSelectMine = "";
+      this.dialogTitle = "新增路线";
       this.ajax
         .post(this.PF.towAPIUrl + "/monitorApi/checkVenderPositionHasExists", {
           venderId: this._venderLoginId
@@ -611,6 +661,9 @@ export default {
     }
   }
 }
+.el-dialog__close {
+  transition: transform 0.3s ease-in-out;
+}
 .deviateDialog {
   .el-dialog__title {
     padding-left: 20px;
@@ -623,11 +676,12 @@ export default {
   }
   .el-dialog__headerbtn {
     &:hover {
-      top: 10px;
+      // top: 10px;
       .el-dialog__close {
         &:hover {
-          font-size: 22px;
-          color: #dd6f6f;
+          // font-size: 22px;
+          // color: #dd6f6f;
+          transform: rotate(-180deg) scale(1.3, 1.3);
         }
       }
     }
@@ -839,9 +893,13 @@ export default {
 
 <style lang="less" scoped>
 .editorBtn {
+  color: #0671af;
   &:hover {
-    color: #77cc9f;
+    color: #0b5f90;
   }
+}
+.lookBtn{
+  color: #888;
 }
 .deleteBtn {
   &:hover {
